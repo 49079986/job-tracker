@@ -1,0 +1,209 @@
+{
+  "schemaVersion": 1,
+  "kind": "job-tracker-sample",
+  "note": "全部为虚构示例数据",
+  "records": [
+    {
+      "id": "e0c704c7-22a5-594a-96d5-2fdebcce287a",
+      "legacyId": "DEMO-001",
+      "company": "星河示例科技",
+      "position": "前端开发工程师",
+      "status": "面试中",
+      "appliedDate": "2026-10-12",
+      "nextAction": "准备二面：React 性能优化",
+      "location": "上海",
+      "jobType": "全职",
+      "jobUrl": "https://example.com/jobs/demo-001",
+      "jobUrlLabel": "岗位页面",
+      "notes": "虚构示例数据",
+      "sources": [
+        "demo"
+      ],
+      "sourceRefs": [],
+      "timeline": [
+        {
+          "date": "2026-10-12",
+          "type": "投递",
+          "content": "示例事件"
+        }
+      ],
+      "flags": []
+    },
+    {
+      "id": "f70ddf06-636f-5e0e-86aa-0afaf475bf3f",
+      "legacyId": "DEMO-002",
+      "company": "青禾虚构食品",
+      "position": "市场管培生",
+      "status": "已投递",
+      "appliedDate": "2026-11-02",
+      "nextAction": "等待简历筛选",
+      "location": "杭州",
+      "jobType": "全职",
+      "jobUrl": "https://example.com/jobs/demo-002",
+      "jobUrlLabel": "岗位页面",
+      "notes": "虚构示例数据",
+      "sources": [
+        "demo"
+      ],
+      "sourceRefs": [],
+      "timeline": [
+        {
+          "date": "2026-11-02",
+          "type": "投递",
+          "content": "示例事件"
+        }
+      ],
+      "flags": []
+    },
+    {
+      "id": "26f09a9e-abaa-568b-9f17-c2d55acdc4e7",
+      "legacyId": "DEMO-003",
+      "company": "北辰样例银行",
+      "position": "金融科技岗",
+      "status": "测评",
+      "appliedDate": "2026-10-28",
+      "nextAction": "完成在线测评",
+      "location": "北京",
+      "jobType": "全职",
+      "jobUrl": "https://example.com/jobs/demo-003",
+      "jobUrlLabel": "岗位页面",
+      "notes": "虚构示例数据",
+      "sources": [
+        "demo"
+      ],
+      "sourceRefs": [],
+      "timeline": [
+        {
+          "date": "2026-10-28",
+          "type": "投递",
+          "content": "示例事件"
+        }
+      ],
+      "flags": []
+    },
+    {
+      "id": "94062122-4be4-5eed-a8a1-5c410ea17e2f",
+      "legacyId": "DEMO-004",
+      "company": "远山演示汽车",
+      "position": "大模型应用开发实习生",
+      "status": "等待结果",
+      "appliedDate": "2026-10-20",
+      "nextAction": "等待终面结果",
+      "location": "苏州",
+      "jobType": "实习",
+      "jobUrl": "https://example.com/jobs/demo-004",
+      "jobUrlLabel": "岗位页面",
+      "notes": "虚构示例数据",
+      "sources": [
+        "demo"
+      ],
+      "sourceRefs": [],
+      "timeline": [
+        {
+          "date": "2026-10-20",
+          "type": "投递",
+          "content": "示例事件"
+        }
+      ],
+      "flags": []
+    },
+    {
+      "id": "e070eec0-25a0-53e1-be03-319457946286",
+      "legacyId": "DEMO-005",
+      "company": "星河示例科技",
+      "position": "数据分析师",
+      "status": "拒绝",
+      "appliedDate": "2026-09-30",
+      "nextAction": "简历未通过，留存记录",
+      "location": "上海",
+      "jobType": "全职",
+      "jobUrl": "https://example.com/jobs/demo-005",
+      "jobUrlLabel": "岗位页面",
+      "notes": "虚构示例数据",
+      "sources": [
+        "demo"
+      ],
+      "sourceRefs": [],
+      "timeline": [
+        {
+          "date": "2026-09-30",
+          "type": "投递",
+          "content": "示例事件"
+        }
+      ],
+      "flags": []
+    },
+    {
+      "id": "4ae3afd1-96ba-5f5e-8b10-f210a8486613",
+      "legacyId": "DEMO-006",
+      "company": "澄明假想医药",
+      "position": "生物信息分析工程师",
+      "status": "Offer",
+      "appliedDate": "2026-09-18",
+      "nextAction": "比较 offer，11 月底前答复",
+      "location": "上海",
+      "jobType": "全职",
+      "jobUrl": "https://example.com/jobs/demo-006",
+      "jobUrlLabel": "岗位页面",
+      "notes": "虚构示例数据",
+      "sources": [
+        "demo"
+      ],
+      "sourceRefs": [],
+      "timeline": [
+        {
+          "date": "2026-09-18",
+          "type": "投递",
+          "content": "示例事件"
+        }
+      ],
+      "flags": []
+    },
+    {
+      "id": "ade6b853-32c8-50d2-9315-33d96f43f595",
+      "legacyId": "DEMO-007",
+      "company": "云帆样本物流",
+      "position": "运营管培生",
+      "status": "待完善投递",
+      "appliedDate": null,
+      "nextAction": "补全简历后提交",
+      "location": "广州",
+      "jobType": "全职",
+      "jobUrl": "https://example.com/jobs/demo-007",
+      "jobUrlLabel": "岗位页面",
+      "notes": "虚构示例数据",
+      "sources": [
+        "demo"
+      ],
+      "sourceRefs": [],
+      "timeline": [],
+      "flags": []
+    },
+    {
+      "id": "5cf91f33-cc11-59f3-8e68-19478141f7fc",
+      "legacyId": "DEMO-008",
+      "company": "晨光测试咨询",
+      "position": "商业分析助理",
+      "status": "撤回",
+      "appliedDate": "2026-10-05",
+      "nextAction": "已撤回申请",
+      "location": null,
+      "jobType": "实习",
+      "jobUrl": "https://example.com/jobs/demo-008",
+      "jobUrlLabel": "岗位页面",
+      "notes": "虚构示例数据",
+      "sources": [
+        "demo"
+      ],
+      "sourceRefs": [],
+      "timeline": [
+        {
+          "date": "2026-10-05",
+          "type": "投递",
+          "content": "示例事件"
+        }
+      ],
+      "flags": []
+    }
+  ]
+}

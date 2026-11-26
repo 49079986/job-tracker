@@ -1,0 +1,23 @@
+# ===== 真实数据：一律不进仓库 =====
+# 本地整理结果（applications.json、报告等）
+local-data/
+# 飞书导出文件
+feishu-export/
+# 原始 Excel / 表格文件（工作区内任何位置）
+*.xlsx
+*.xlsm
+*.xls
+~$*
+
+# ===== 密钥 =====
+.env
+.env.*
+!.env.example
+
+# ===== 构建与依赖 =====
+node_modules/
+dist/
+.vite/
+*.log
+.DS_Store
+Thumbs.db

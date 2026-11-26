@@ -1,0 +1,75 @@
+export const STATUSES = ['已投递', '待完善投递', '测评', '面试中', '等待结果', 'Offer', '拒绝', '撤回'];
+
+export const STATUS_TONE = {
+  '已投递': 'neutral',
+  '待完善投递': 'warn',
+  '测评': 'info',
+  '面试中': 'accent',
+  '等待结果': 'info',
+  Offer: 'success',
+  '拒绝': 'muted',
+  '撤回': 'muted',
+};
+
+export const SOURCE_LABEL = { excel: 'Excel', feishu: '飞书', manual: '手动', import: '导入', demo: '示例' };
+
+/** 网站字段 ↔ 数据库列。导出 JSON 使用左侧（camelCase）字段名。 */
+export const FIELD_MAP = {
+  id: 'id',
+  legacyId: 'legacy_id',
+  company: 'company',
+  position: 'position',
+  status: 'status',
+  appliedDate: 'applied_date',
+  nextAction: 'next_action',
+  lastProgressDate: 'last_progress_date',
+  lastProgressSummary: 'last_progress_summary',
+  confirmedEventAt: 'confirmed_event_at',
+  eventTypeAndTimezone: 'event_type_and_timezone',
+  jobCode: 'job_code',
+  location: 'location',
+  jobType: 'job_type',
+  channel: 'channel',
+  jobUrl: 'job_url',
+  jobUrlLabel: 'job_url_label',
+  sourceDocLabel: 'source_doc_label',
+  notes: 'notes',
+  sources: 'sources',
+  sourceRefs: 'source_refs',
+  timeline: 'timeline',
+  flags: 'flags',
+  raw: 'raw',
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+};
+
+export const READONLY_FIELDS = ['createdAt', 'updatedAt'];
+
+/** 编辑表单里的字段 */
+export const FORM_FIELDS = [
+  { key: 'company', label: '公司', required: true },
+  { key: 'position', label: '岗位', required: true },
+  { key: 'status', label: '状态', type: 'status' },
+  { key: 'appliedDate', label: '投递日期', type: 'date' },
+  { key: 'nextAction', label: '下一步行动' },
+  { key: 'lastProgressDate', label: '最近进展日期', type: 'date' },
+  { key: 'lastProgressSummary', label: '最近进展摘要', type: 'textarea' },
+  { key: 'jobCode', label: '岗位编号' },
+  { key: 'location', label: '工作地点' },
+  { key: 'jobType', label: '工作类型' },
+  { key: 'channel', label: '投递渠道' },
+  { key: 'jobUrl', label: '招聘链接', type: 'url' },
+  { key: 'jobUrlLabel', label: '链接文字' },
+  { key: 'confirmedEventAt', label: '已确认面试或截止时间' },
+  { key: 'eventTypeAndTimezone', label: '时间类型及原始时区' },
+  { key: 'notes', label: '备注', type: 'textarea', wide: true },
+];
+
+export const CSV_COLUMNS = [
+  ['id', 'ID'], ['legacyId', '原编号'], ['company', '公司'], ['position', '岗位'], ['status', '状态'],
+  ['appliedDate', '投递日期'], ['nextAction', '下一步行动'], ['lastProgressDate', '最近进展日期'],
+  ['lastProgressSummary', '最近进展摘要'], ['jobCode', '岗位编号'], ['location', '工作地点'],
+  ['jobType', '工作类型'], ['channel', '投递渠道'], ['jobUrl', '招聘链接'], ['jobUrlLabel', '链接文字'],
+  ['confirmedEventAt', '已确认面试或截止时间'], ['eventTypeAndTimezone', '时间类型及原始时区'],
+  ['notes', '备注'], ['sources', '来源'], ['createdAt', '创建时间'], ['updatedAt', '更新时间'],
+];

@@ -1,0 +1,26 @@
+{
+  "name": "job-tracker",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "中文求职投递管理（Vite + React + Supabase，部署到 GitHub Pages）",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check:release": "node scripts/check-release.mjs",
+    "test:rls": "node scripts/rls-anon-test.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.4.1",
+    "vite": "^6.3.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
