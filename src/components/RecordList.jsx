@@ -19,10 +19,10 @@ export default function RecordList({ records, startIndex = 0, mobile, readOnly, 
     readOnly ? <StatusBadge status={r.status} /> : <StatusSelect value={r.status} disabled={busyIds.has(r.id)} onChange={(v) => onStatus(r, v)} label={label} />;
   const actions = (r) =>
     readOnly ? (
-      <button className="btn small" onClick={() => onEdit(r)}>详情</button>
+      <button className="btn small action-btn" onClick={() => onEdit(r)}>详情</button>
     ) : (
       <>
-        <button className="btn small" onClick={() => onEdit(r)}>编辑</button>
+        <button className="btn small action-btn" onClick={() => onEdit(r)}>编辑</button>
         <button className="btn small danger-ghost" onClick={() => onDelete(r)}>删除</button>
       </>
     );
@@ -55,7 +55,7 @@ export default function RecordList({ records, startIndex = 0, mobile, readOnly, 
     );
   }
   return (
-    <div className="table-wrap">
+    <div className="table-wrap" role="region" aria-label="投递记录表格" tabIndex={0}>
       <table className="table">
         <thead>
           <tr>
@@ -75,13 +75,13 @@ export default function RecordList({ records, startIndex = 0, mobile, readOnly, 
             <tr key={r.id} className="row-anim" style={{ '--i': Math.min(i, 12) }}>
               <td className="seq-col muted">{startIndex + i + 1}</td>
               <td className="company">{r.company}</td>
-              <td>
+              <td className="position-cell">
                 <div>{r.position}</div>
                 <JobLink r={r} />
               </td>
               <td className="industry">{r.industry || <span className="muted">未分类</span>}</td>
               <td>{status(r, `${r.company} ${r.position} 状态`)}</td>
-              <td className="nowrap">{r.appliedDate || <span className="muted">未知</span>}</td>
+              <td className="date-cell nowrap">{r.appliedDate || <span className="muted">未知</span>}</td>
               <td className="next">{r.nextAction}</td>
               <td className="nowrap muted">{sourceText(r)}</td>
               <td className="actions-col nowrap">

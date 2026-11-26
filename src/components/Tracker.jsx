@@ -16,6 +16,13 @@ import Pagination from './Pagination.jsx';
 import MultiSelect from './MultiSelect.jsx';
 
 const PAGE_SIZE_KEY = 'job-tracker-page-size';
+const OVERVIEW = [
+  { status: '全部', label: '全部记录', tone: 'neutral' },
+  { status: '面试中', label: '面试中', tone: 'accent' },
+  { status: '等待结果', label: '等待结果', tone: 'info' },
+  { status: 'Offer', label: 'Offer', tone: 'success' },
+];
+
 const readPageSize = () => {
   try {
     const raw = localStorage.getItem(PAGE_SIZE_KEY);
@@ -204,7 +211,7 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
             </>
           ) : (
             <span className="signin">
-              <SignInButton className="btn ghost" />
+              <SignInButton className="btn" />
             </span>
           )}
         </div>
@@ -213,40 +220,76 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
       {authError && <p className="error-text banner-error" role="alert">{authError}</p>}
       {notAllowed && user && <NotAllowedBanner user={user} />}
 
-      <section className="filters">
-        <input
-          className="search"
-          type="search"
-          placeholder="搜索公司或岗位"
-          aria-label="搜索公司或岗位"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <MultiSelect
-          label="按职位行业筛选"
-          allLabel="全部行业"
-          total={records.length}
-          options={industryOptions}
-          selected={industries}
-          onChange={setIndustries}
-        />
-        <button
-          className="btn sort-btn"
-          onClick={() => setSort((s) => (s === 'desc' ? 'asc' : 'desc'))}
-          aria-label={`按投递日期排序，当前${sort === 'desc' ? '从新到旧' : '从旧到新'}`}
-        >
-          <span className="sort-long">投递日期 </span>{sort === 'desc' ? '↓ 新→旧' : '↑ 旧→新'}
-        </button>
+      <section className="overview" aria-labelledby="overview-title">
+        <h2 id="overview-title">投递总览</h2>
+        <dl className="overview-stats">
+          {OVERVIEW.map(({ status: key, label, tone }) => (
+            <div className={`overview-stat tone-${tone}`} key={key}>
+              <dt>{label}</dt>
+              <dd>{loading || loadError ? '—' : counts[key]}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
-      <nav className="chips" aria-label="按状态筛选">
-        {['全部', ...STATUSES].map((s) => (
-          <button key={s} className={`chip ${status === s ? 'active' : ''}`} aria-pressed={status === s} onClick={() => setStatus(s)}>
-            {s} <span className="chip-count">{counts[s] || 0}</span>
-          </button>
-        ))}
-      </nav>
 
       <main className="content">
+        <div className="list-meta">
+          <div className="list-title">
+            <h2>投递记录</h2>
+            {!loading && !loadError && (
+              <p className="result-count">
+                共 {visible.length} 条{visible.length !== records.length ? `（全部 ${records.length} 条）` : ''}
+                {visible.length > 0 && pageSize > 0 && totalPages > 1 && ` · 第 ${start + 1}–${Math.min(start + pageSize, visible.length)} 条`}
+              </p>
+            )}
+          </div>
+          {!loading && !loadError && (
+            <label className="page-size">
+              每页
+              <select value={pageSize} onChange={(e) => changePageSize(Number(e.target.value))} aria-label="每页显示条数">
+                {PAGE_SIZES.map((n) => (
+                  <option key={n} value={n}>{n ? `${n} 条` : '全部'}</option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
+        <div className="filters">
+          <label className="search-wrap">
+            <span className="search-icon" aria-hidden="true" />
+            <input
+              className="search"
+              type="search"
+              placeholder="搜索公司或岗位"
+              aria-label="搜索公司或岗位"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </label>
+          <MultiSelect
+            label="按职位行业筛选"
+            allLabel="全部行业"
+            total={records.length}
+            options={industryOptions}
+            selected={industries}
+            onChange={setIndustries}
+          />
+          <button
+            className="btn sort-btn"
+            onClick={() => setSort((s) => (s === 'desc' ? 'asc' : 'desc'))}
+            aria-label={`按投递日期排序，当前${sort === 'desc' ? '从新到旧' : '从旧到新'}`}
+          >
+            <span className="sort-icon" aria-hidden="true">{sort === 'desc' ? '↓' : '↑'}</span>
+            <span>投递日期<span className="sort-order"> · {sort === 'desc' ? '最新' : '最早'}</span></span>
+          </button>
+        </div>
+        <nav className="chips" aria-label="按状态筛选">
+          {['全部', ...STATUSES].map((s) => (
+            <button key={s} className={`chip ${status === s ? 'active' : ''}`} aria-pressed={status === s} onClick={() => setStatus(s)}>
+              {s} <span className="chip-count">{counts[s] || 0}</span>
+            </button>
+          ))}
+        </nav>
         {loading ? (
           <div className="center-pad"><div className="spinner" aria-hidden="true" /><p className="muted">正在读取记录…</p></div>
         ) : loadError ? (
@@ -254,42 +297,24 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
             <p className="error-text" role="alert">{loadError}</p>
             <button className="btn" onClick={load}>重试</button>
           </div>
+        ) : visible.length === 0 ? (
+          <div className="empty fade-in" key={listKey}>
+            {records.length === 0 ? (canEdit ? '还没有记录。可以新增一条，或导入 JSON。' : '还没有记录。') : '没有符合条件的记录。'}
+          </div>
         ) : (
           <>
-            <div className="list-meta">
-              <p className="result-count muted">
-                共 {visible.length} 条{visible.length !== records.length ? `（全部 ${records.length} 条）` : ''}
-                {visible.length > 0 && pageSize > 0 && totalPages > 1 && ` · 第 ${start + 1}–${Math.min(start + pageSize, visible.length)} 条`}
-              </p>
-              <label className="page-size">
-                每页
-                <select value={pageSize} onChange={(e) => changePageSize(Number(e.target.value))} aria-label="每页显示条数">
-                  {PAGE_SIZES.map((n) => (
-                    <option key={n} value={n}>{n ? `${n} 条` : '全部'}</option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            {visible.length === 0 ? (
-              <div className="empty fade-in" key={listKey}>
-                {records.length === 0 ? (canEdit ? '还没有记录。可以新增一条，或导入 JSON。' : '还没有记录。') : '没有符合条件的记录。'}
-              </div>
-            ) : (
-              <>
-              <RecordList
-                key={listKey}
-                records={pageItems}
-                startIndex={start}
-                mobile={mobile}
-                readOnly={!canEdit}
-                busyIds={busyIds}
-                onStatus={changeStatus}
-                onEdit={setEditing}
-                onDelete={setDeleting}
-              />
-              <Pagination page={currentPage} totalPages={totalPages} onChange={goPage} />
-              </>
-            )}
+            <RecordList
+              key={listKey}
+              records={pageItems}
+              startIndex={start}
+              mobile={mobile}
+              readOnly={!canEdit}
+              busyIds={busyIds}
+              onStatus={changeStatus}
+              onEdit={setEditing}
+              onDelete={setDeleting}
+            />
+            <Pagination page={currentPage} totalPages={totalPages} onChange={goPage} />
           </>
         )}
       </main>
