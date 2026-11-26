@@ -13,6 +13,7 @@ import avatar from '../assets/avatar.js';
 import SignInButton from './Login.jsx';
 import NotAllowedBanner from './Unauthorized.jsx';
 import Pagination from './Pagination.jsx';
+import MultiSelect from './MultiSelect.jsx';
 
 const PAGE_SIZE_KEY = 'job-tracker-page-size';
 const readPageSize = () => {
@@ -33,7 +34,7 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('全部');
   const [sort, setSort] = useState('desc');
-  const [industry, setIndustry] = useState('全部');
+  const [industries, setIndustries] = useState([]); // 空 = 全部行业
   const [pageSize, setPageSize] = useState(readPageSize);
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState(null); // null | 'new' | record（只读模式下为查看详情）
@@ -81,7 +82,7 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
     const list = records.filter(
       (r) =>
         (status === '全部' || r.status === status) &&
-        (industry === '全部' || (industry === UNCATEGORIZED ? !r.industry : r.industry === industry)) &&
+        (industries.length === 0 || industries.includes(r.industry || UNCATEGORIZED)) &&
         (!q || normKey(r.company).includes(q) || normKey(r.position).includes(q)),
     );
     const dir = sort === 'desc' ? -1 : 1;
@@ -92,10 +93,10 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
       if (a.appliedDate !== b.appliedDate) return a.appliedDate < b.appliedDate ? -dir : dir;
       return (a.legacyId || a.id).localeCompare(b.legacyId || b.id) * dir;
     });
-  }, [records, query, status, industry, sort]);
+  }, [records, query, status, industries, sort]);
 
   // 分页：筛选、排序或每页条数变化时回到第 1 页
-  useEffect(() => setPage(1), [query, status, industry, sort, pageSize]);
+  useEffect(() => setPage(1), [query, status, industries, sort, pageSize]);
   const totalPages = pageSize ? Math.max(1, Math.ceil(visible.length / pageSize)) : 1;
   const currentPage = Math.min(page, totalPages);
   const start = pageSize ? (currentPage - 1) * pageSize : 0;
@@ -169,7 +170,7 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
   };
 
   const name = user?.user_metadata?.user_name || user?.user_metadata?.preferred_username || '';
-  const listKey = `${status}|${industry}|${sort}|${query}|${pageSize}|${currentPage}`;
+  const listKey = `${status}|${industries.join(',')}|${sort}|${query}|${pageSize}|${currentPage}`;
 
   return (
     <div className="app">
@@ -221,19 +222,14 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <select
-          className="filter-select"
-          aria-label="按职位行业筛选"
-          value={industry}
-          onChange={(e) => setIndustry(e.target.value)}
-        >
-          <option value="全部">全部行业（{records.length}）</option>
-          {industryOptions.map((o) => (
-            <option key={o.value} value={o.value} disabled={!o.count}>
-              {o.value}（{o.count}）
-            </option>
-          ))}
-        </select>
+        <MultiSelect
+          label="按职位行业筛选"
+          allLabel="全部行业"
+          total={records.length}
+          options={industryOptions}
+          selected={industries}
+          onChange={setIndustries}
+        />
         <button
           className="btn sort-btn"
           onClick={() => setSort((s) => (s === 'desc' ? 'asc' : 'desc'))}
