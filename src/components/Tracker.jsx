@@ -51,6 +51,7 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
   const [exportOpen, setExportOpen] = useState(false);
   const [busyIds, setBusyIds] = useState(() => new Set());
   const mobile = useMedia('(max-width: 760px)');
+  const topHeadingRef = useRef(null);
   const contentRef = useRef(null);
   const headingRef = useRef(null);
   const resultsRef = useRef(null);
@@ -233,7 +234,7 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
       <header className="topbar">
         <div className="brand-row">
           <img className="logo-mark small avatar" src={avatar} alt="" aria-hidden="true" width="32" height="32" />
-          <h1 className="brand">求职投递管理</h1>
+          <h1 className="brand" tabIndex={-1} ref={topHeadingRef}>求职投递管理</h1>
         </div>
         <div className="top-actions">
           {canEdit && (
@@ -382,6 +383,8 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
         )}
       </main>
 
+      <BackToTop headingRef={topHeadingRef} />
+
       {(dialog?.kind === 'view' || (canEdit && (dialog?.kind === 'new' || dialog?.kind === 'edit'))) && (
         <EditDialog
           record={dialog.record}
@@ -411,5 +414,35 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
         />
       )}
     </div>
+  );
+}
+
+function BackToTop({ headingRef }) {
+  const [visible, setVisible] = useState(() => window.scrollY > 0);
+
+  useEffect(() => {
+    const updateVisibility = () => setVisible(window.scrollY > 0);
+    window.addEventListener('scroll', updateVisibility, { passive: true });
+    updateVisibility();
+    return () => window.removeEventListener('scroll', updateVisibility);
+  }, []);
+
+  const goToTop = () => {
+    headingRef.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+  };
+
+  return (
+    <button
+      type="button"
+      className="back-to-top"
+      data-visible={visible}
+      inert={!visible}
+      aria-label="回到顶部"
+      title="回到顶部"
+      onClick={goToTop}
+    >
+      <span aria-hidden="true">↑</span>
+    </button>
   );
 }

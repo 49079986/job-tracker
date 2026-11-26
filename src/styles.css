@@ -19,6 +19,7 @@
   --radius: 8px;
   --dur: 160ms;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --corner-bottom: max(16px, calc(env(safe-area-inset-bottom, 0px) + 10px));
   color-scheme: dark;
 }
 
@@ -267,8 +268,21 @@ a:hover .link-arrow, a:focus-visible .link-arrow, a:active .link-arrow { transfo
 .seg button + button { border-left: 1px solid var(--line-2); }
 .seg button.on { background: var(--green); color: var(--on-green); font-weight: 700; }
 
+/* 回到顶部 */
+.back-to-top {
+  position: fixed; z-index: 6; right: max(16px, calc(env(safe-area-inset-right, 0px) + 10px)); bottom: var(--corner-bottom);
+  display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--accent);
+  border-radius: 12px; background: var(--panel); color: var(--green); box-shadow: 0 6px 20px rgb(0 0 0 / 45%);
+  font: 650 25px/1 system-ui, sans-serif; cursor: pointer;
+  opacity: 0; transform: translateY(6px); visibility: hidden; pointer-events: none;
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease), visibility 0s var(--dur), background var(--dur) var(--ease);
+}
+.back-to-top[data-visible='true'] { opacity: 1; transform: none; visibility: visible; pointer-events: auto; transition-delay: 0s; }
+.back-to-top:hover { background: var(--panel-2); }
+
 /* 提示 */
-.toasts { position: fixed; right: 16px; bottom: 16px; z-index: 100; display: grid; gap: 8px; max-width: min(380px, calc(100vw - 32px)); }
+.toasts { position: fixed; right: 16px; bottom: var(--corner-bottom); z-index: 100; display: grid; gap: 8px; max-width: min(380px, calc(100vw - 32px)); }
+.app:has(.back-to-top[data-visible='true']) + .toasts { bottom: calc(var(--corner-bottom) + 56px); }
 .toast { background: var(--panel-2); border: 1px solid var(--line-2); border-left: 3px solid var(--green); padding: 10px 14px; border-radius: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); font-size: 14px; animation: rise var(--dur) var(--ease); }
 .toast.error { border-left-color: var(--red); }
 
@@ -300,13 +314,13 @@ a:hover .link-arrow, a:focus-visible .link-arrow, a:active .link-arrow { transfo
   *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
   .spinner { animation: spin 1.6s linear infinite !important; }
   .app, .results-motion, .overlay, .modal { animation: none !important; }
-  .popup-motion { transition-delay: 0s !important; }
+  .popup-motion, .back-to-top { transition-delay: 0s !important; }
 }
 
 /* ---------- 手机 ---------- */
 @media (max-width: 760px) {
   body { font-size: 15.5px; }
-  .app { padding: 0 max(12px, env(safe-area-inset-right)) 48px max(12px, env(safe-area-inset-left)); }
+  .app { padding: 0 max(12px, env(safe-area-inset-right)) calc(var(--corner-bottom) + 52px) max(12px, env(safe-area-inset-left)); }
   .topbar { min-height: 60px; gap: 8px; padding: 10px 0; }
   .brand-row .brand { font-size: 15px; }
   .top-actions:has(.primary) { width: 100%; }
