@@ -4,7 +4,8 @@
 
 - **公开只读**：任何人打开网页都能浏览、搜索、筛选全部记录（含备注），不用登录。
 - **编辑需登录**：新增、编辑、删除、改状态、导入、导出只有白名单里的 GitHub 账号登录后才能用；数据库层用 RLS 强制限制，绕开网页直接调用接口也写不进去。
-- 支持搜索、按状态筛选、按投递日期排序、新增、编辑、删除、快速改状态。
+- 支持搜索、按状态和职位行业筛选、按投递日期排序、新增、编辑、删除、快速改状态。
+- 列表左侧显示序号，支持分页，每页 20 / 50 / 100 条或全部（选择会记在本机浏览器里）。
 - 支持导入 JSON（导入前先预览）和导出全部记录（JSON / CSV）。
 - 桌面端显示表格，手机端显示卡片。
 
@@ -23,6 +24,7 @@ job-tracker/
 ├─ src/                    前端代码
 ├─ supabase/schema.sql     建表 + RLS + 白名单（公开只读，编辑限白名单）
 ├─ supabase/migrate-public-read.sql  旧版（仅白名单可读）升级为公开只读的迁移
+├─ supabase/migrate-industry.sql     旧版升级：新增「职位行业」列
 ├─ scripts/check-release.mjs   发布前检查（真实数据 / 密钥）
 ├─ scripts/rls-anon-test.mjs   权限复测脚本
 ├─ .github/workflows/deploy.yml  GitHub Pages 部署流程（交付时在根目录 github-workflow-deploy.yml，见第 7 节）
@@ -54,7 +56,7 @@ npm run dev
 
 1. 在 <https://supabase.com/dashboard> 新建项目，记下 **Project URL**（`https://<project-ref>.supabase.co`）。
 2. **建表和 RLS**：打开 **SQL Editor**，粘贴 `supabase/schema.sql` 的全部内容并运行。这个脚本可以重复执行。
-   已经用旧版脚本（仅白名单可读）建过表的项目，只需运行 `supabase/migrate-public-read.sql`。
+   已经用旧版脚本建过表的项目，按需运行 `supabase/migrate-public-read.sql`（公开只读）和 `supabase/migrate-industry.sql`（职位行业列）。
 3. **API key**：打开 **Project Settings → API Keys**，复制 **Publishable key**（以 `sb_publishable_` 开头）。
    - 前端只用 publishable key。
    - `secret` / `service_role` key 不要放进 `.env.local`、GitHub Variables、代码或聊天记录。
@@ -221,6 +223,7 @@ npm run check:release
 | nextAction | next_action | 下一步行动 |
 | lastProgressDate / lastProgressSummary | last_progress_* | 最近进展 |
 | jobCode / location / jobType / channel | 同名蛇形 | 岗位编号、地点、类型、渠道 |
+| industry | industry | 职位行业（预设 14 类，也可自填；为空时显示「未分类」） |
 | jobUrl / jobUrlLabel | job_url / job_url_label | 招聘链接及显示文字 |
 | confirmedEventAt / eventTypeAndTimezone | confirmed_event_at / event_type_and_timezone | 已确认的面试或截止时间，以及原始时区 |
 | notes | notes | 备注 |

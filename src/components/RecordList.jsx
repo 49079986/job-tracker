@@ -14,7 +14,7 @@ function JobLink({ r }) {
   );
 }
 
-export default function RecordList({ records, mobile, readOnly, busyIds, onStatus, onEdit, onDelete }) {
+export default function RecordList({ records, startIndex = 0, mobile, readOnly, busyIds, onStatus, onEdit, onDelete }) {
   const status = (r, label) =>
     readOnly ? <StatusBadge status={r.status} /> : <StatusSelect value={r.status} disabled={busyIds.has(r.id)} onChange={(v) => onStatus(r, v)} label={label} />;
   const actions = (r) =>
@@ -33,13 +33,14 @@ export default function RecordList({ records, mobile, readOnly, busyIds, onStatu
           <li key={r.id} className="card row-anim" style={{ '--i': Math.min(i, 12) }}>
             <div className="card-head">
               <div>
-                <div className="company">{r.company}</div>
+                <div className="company"><span className="seq">#{startIndex + i + 1}</span>{r.company}</div>
                 <div className="position">{r.position}</div>
               </div>
               {status(r, `${r.company} 状态`)}
             </div>
             <dl className="card-meta">
               <div><dt>投递日期</dt><dd>{r.appliedDate || <span className="muted">未知</span>}</dd></div>
+              <div><dt>职位行业</dt><dd>{r.industry || <span className="muted">未分类</span>}</dd></div>
               {r.nextAction && <div className="span2"><dt>下一步</dt><dd>{r.nextAction}</dd></div>}
               <div><dt>来源</dt><dd>{sourceText(r)}</dd></div>
             </dl>
@@ -58,8 +59,10 @@ export default function RecordList({ records, mobile, readOnly, busyIds, onStatu
       <table className="table">
         <thead>
           <tr>
+            <th className="seq-col">#</th>
             <th>公司</th>
             <th>岗位</th>
+            <th>行业</th>
             <th>状态</th>
             <th className="nowrap">投递日期</th>
             <th>下一步行动</th>
@@ -70,11 +73,13 @@ export default function RecordList({ records, mobile, readOnly, busyIds, onStatu
         <tbody>
           {records.map((r, i) => (
             <tr key={r.id} className="row-anim" style={{ '--i': Math.min(i, 12) }}>
+              <td className="seq-col muted">{startIndex + i + 1}</td>
               <td className="company">{r.company}</td>
               <td>
                 <div>{r.position}</div>
                 <JobLink r={r} />
               </td>
+              <td className="industry">{r.industry || <span className="muted">未分类</span>}</td>
               <td>{status(r, `${r.company} ${r.position} 状态`)}</td>
               <td className="nowrap">{r.appliedDate || <span className="muted">未知</span>}</td>
               <td className="next">{r.nextAction}</td>

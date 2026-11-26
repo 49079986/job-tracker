@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { STATUSES } from '../lib/constants.js';
+import { INDUSTRIES, PAGE_SIZES, STATUSES, UNCATEGORIZED } from '../lib/constants.js';
 import { createRecord, deleteRecord, listAll, updateRecord } from '../lib/repo.js';
 import { buildCsvExport, buildJsonExport, download, exportFilename } from '../lib/exporter.js';
 import { normKey } from '../lib/importer.js';
@@ -12,6 +12,18 @@ import useMedia from './useMedia.js';
 import avatar from '../assets/avatar.js';
 import SignInButton from './Login.jsx';
 import NotAllowedBanner from './Unauthorized.jsx';
+import Pagination from './Pagination.jsx';
+
+const PAGE_SIZE_KEY = 'job-tracker-page-size';
+const readPageSize = () => {
+  try {
+    const raw = localStorage.getItem(PAGE_SIZE_KEY);
+    const v = Number(raw);
+    return raw !== null && raw !== '' && PAGE_SIZES.includes(v) ? v : 50;
+  } catch {
+    return 50;
+  }
+};
 
 export default function Tracker({ user, canEdit, notAllowed, authError, onSignOut }) {
   const toast = useToast();
@@ -21,6 +33,9 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('全部');
   const [sort, setSort] = useState('desc');
+  const [industry, setIndustry] = useState('全部');
+  const [pageSize, setPageSize] = useState(readPageSize);
+  const [page, setPage] = useState(1);
   const [editing, setEditing] = useState(null); // null | 'new' | record（只读模式下为查看详情）
   const [deleting, setDeleting] = useState(null);
   const [importing, setImporting] = useState(false);
@@ -48,11 +63,25 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
     return c;
   }, [records]);
 
+  // 行业选项：预设行业 + 数据里出现的其他行业 + 未分类；计数按全部记录
+  const industryOptions = useMemo(() => {
+    const c = new Map();
+    records.forEach((r) => {
+      const k = r.industry || UNCATEGORIZED;
+      c.set(k, (c.get(k) || 0) + 1);
+    });
+    const extra = [...c.keys()].filter((k) => !INDUSTRIES.includes(k) && k !== UNCATEGORIZED).sort((a, b) => a.localeCompare(b, 'zh'));
+    const list = [...INDUSTRIES, ...extra].map((k) => ({ value: k, count: c.get(k) || 0 }));
+    if (c.get(UNCATEGORIZED)) list.push({ value: UNCATEGORIZED, count: c.get(UNCATEGORIZED) });
+    return list;
+  }, [records]);
+
   const visible = useMemo(() => {
     const q = normKey(query);
     const list = records.filter(
       (r) =>
         (status === '全部' || r.status === status) &&
+        (industry === '全部' || (industry === UNCATEGORIZED ? !r.industry : r.industry === industry)) &&
         (!q || normKey(r.company).includes(q) || normKey(r.position).includes(q)),
     );
     const dir = sort === 'desc' ? -1 : 1;
@@ -63,7 +92,26 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
       if (a.appliedDate !== b.appliedDate) return a.appliedDate < b.appliedDate ? -dir : dir;
       return (a.legacyId || a.id).localeCompare(b.legacyId || b.id) * dir;
     });
-  }, [records, query, status, sort]);
+  }, [records, query, status, industry, sort]);
+
+  // 分页：筛选、排序或每页条数变化时回到第 1 页
+  useEffect(() => setPage(1), [query, status, industry, sort, pageSize]);
+  const totalPages = pageSize ? Math.max(1, Math.ceil(visible.length / pageSize)) : 1;
+  const currentPage = Math.min(page, totalPages);
+  const start = pageSize ? (currentPage - 1) * pageSize : 0;
+  const pageItems = pageSize ? visible.slice(start, start + pageSize) : visible;
+  const changePageSize = (v) => {
+    setPageSize(v);
+    try {
+      localStorage.setItem(PAGE_SIZE_KEY, String(v));
+    } catch {
+      /* 浏览器不允许存储时只在本次生效 */
+    }
+  };
+  const goPage = (p) => {
+    setPage(p);
+    document.querySelector('.content')?.scrollIntoView({ block: 'start', behavior: 'auto' });
+  };
 
   const markBusy = (id, on) =>
     setBusyIds((s) => {
@@ -121,7 +169,7 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
   };
 
   const name = user?.user_metadata?.user_name || user?.user_metadata?.preferred_username || '';
-  const listKey = `${status}|${sort}|${query}`;
+  const listKey = `${status}|${industry}|${sort}|${query}|${pageSize}|${currentPage}`;
 
   return (
     <div className="app">
@@ -173,6 +221,19 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
+        <select
+          className="filter-select"
+          aria-label="按职位行业筛选"
+          value={industry}
+          onChange={(e) => setIndustry(e.target.value)}
+        >
+          <option value="全部">全部行业（{records.length}）</option>
+          {industryOptions.map((o) => (
+            <option key={o.value} value={o.value} disabled={!o.count}>
+              {o.value}（{o.count}）
+            </option>
+          ))}
+        </select>
         <button
           className="btn sort-btn"
           onClick={() => setSort((s) => (s === 'desc' ? 'asc' : 'desc'))}
@@ -199,15 +260,30 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
           </div>
         ) : (
           <>
-            <p className="result-count muted">共 {visible.length} 条{visible.length !== records.length ? `（全部 ${records.length} 条）` : ''}</p>
+            <div className="list-meta">
+              <p className="result-count muted">
+                共 {visible.length} 条{visible.length !== records.length ? `（全部 ${records.length} 条）` : ''}
+                {visible.length > 0 && pageSize > 0 && totalPages > 1 && ` · 第 ${start + 1}–${Math.min(start + pageSize, visible.length)} 条`}
+              </p>
+              <label className="page-size">
+                每页
+                <select value={pageSize} onChange={(e) => changePageSize(Number(e.target.value))} aria-label="每页显示条数">
+                  {PAGE_SIZES.map((n) => (
+                    <option key={n} value={n}>{n ? `${n} 条` : '全部'}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
             {visible.length === 0 ? (
               <div className="empty fade-in" key={listKey}>
                 {records.length === 0 ? (canEdit ? '还没有记录。可以新增一条，或导入 JSON。' : '还没有记录。') : '没有符合条件的记录。'}
               </div>
             ) : (
+              <>
               <RecordList
                 key={listKey}
-                records={visible}
+                records={pageItems}
+                startIndex={start}
                 mobile={mobile}
                 readOnly={!canEdit}
                 busyIds={busyIds}
@@ -215,6 +291,8 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
                 onEdit={setEditing}
                 onDelete={setDeleting}
               />
+              <Pagination page={currentPage} totalPages={totalPages} onChange={goPage} />
+              </>
             )}
           </>
         )}

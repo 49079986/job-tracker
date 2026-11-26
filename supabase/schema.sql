@@ -60,6 +60,7 @@ create table if not exists public.applications (
   job_code               text,
   location               text,
   job_type               text,
+  industry               text,               -- 职位行业（可在网页上编辑）
   channel                text,
   job_url                text,
   job_url_label          text,
@@ -75,6 +76,9 @@ create table if not exists public.applications (
   updated_at             timestamptz not null default now()
 );
 
+-- 旧项目升级：补上后来新增的列（新项目建表时已包含，这里不会重复添加）
+alter table public.applications add column if not exists industry text;
+
 -- 同一来源的同一原表编号只能出现一次（防止 ID 不同但来源编号相同的重复导入）
 create unique index if not exists applications_source_legacy_uidx
   on public.applications ((sources[1]), legacy_id)
@@ -82,6 +86,7 @@ create unique index if not exists applications_source_legacy_uidx
 
 create index if not exists applications_applied_date_idx on public.applications (applied_date desc nulls last);
 create index if not exists applications_status_idx on public.applications (status);
+create index if not exists applications_industry_idx on public.applications (industry);
 
 create or replace function public.touch_updated_at()
 returns trigger language plpgsql set search_path = '' as $$

@@ -31,6 +31,6 @@ export function toDb(rec, { includeId = true } = {}) {
 
 export const emptyRecord = () => ({
   company: '', position: '', status: '已投递', appliedDate: '', nextAction: '',
-  lastProgressDate: '', lastProgressSummary: '', jobCode: '', location: '', jobType: '',
+  lastProgressDate: '', lastProgressSummary: '', jobCode: '', location: '', jobType: '', industry: '',
   channel: '', jobUrl: '', jobUrlLabel: '', confirmedEventAt: '', eventTypeAndTimezone: '', notes: '',
 });

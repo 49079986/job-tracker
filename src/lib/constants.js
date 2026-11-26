@@ -1,5 +1,13 @@
 export const STATUSES = ['已投递', '待完善投递', '测评', '面试中', '等待结果', 'Offer', '拒绝', '撤回'];
 
+/** 职位行业预设选项（编辑时也可以自行输入其他行业） */
+export const INDUSTRIES = [
+  '生物医药', '科研/教育', '互联网/游戏/传媒', 'IT/软件/AI', '半导体/电子', '汽车/机械/制造', '新能源/化工/材料',
+  '金融/保险', '快消/食品', '零售/时尚/奢侈品', '检测认证', '咨询/人力/服务', '房地产/建筑', '电商/贸易/物流',
+];
+export const UNCATEGORIZED = '未分类';
+export const PAGE_SIZES = [20, 50, 100, 0]; // 0 = 全部
+
 export const STATUS_TONE = {
   '已投递': 'neutral',
   '待完善投递': 'warn',
@@ -29,6 +37,7 @@ export const FIELD_MAP = {
   jobCode: 'job_code',
   location: 'location',
   jobType: 'job_type',
+  industry: 'industry',
   channel: 'channel',
   jobUrl: 'job_url',
   jobUrlLabel: 'job_url_label',
@@ -50,6 +59,7 @@ export const FORM_FIELDS = [
   { key: 'company', label: '公司', required: true },
   { key: 'position', label: '岗位', required: true },
   { key: 'status', label: '状态', type: 'status' },
+  { key: 'industry', label: '职位行业', type: 'industry' },
   { key: 'appliedDate', label: '投递日期', type: 'date' },
   { key: 'nextAction', label: '下一步行动' },
   { key: 'lastProgressDate', label: '最近进展日期', type: 'date' },
@@ -69,7 +79,7 @@ export const CSV_COLUMNS = [
   ['id', 'ID'], ['legacyId', '原编号'], ['company', '公司'], ['position', '岗位'], ['status', '状态'],
   ['appliedDate', '投递日期'], ['nextAction', '下一步行动'], ['lastProgressDate', '最近进展日期'],
   ['lastProgressSummary', '最近进展摘要'], ['jobCode', '岗位编号'], ['location', '工作地点'],
-  ['jobType', '工作类型'], ['channel', '投递渠道'], ['jobUrl', '招聘链接'], ['jobUrlLabel', '链接文字'],
+  ['jobType', '工作类型'], ['industry', '职位行业'], ['channel', '投递渠道'], ['jobUrl', '招聘链接'], ['jobUrlLabel', '链接文字'],
   ['confirmedEventAt', '已确认面试或截止时间'], ['eventTypeAndTimezone', '时间类型及原始时区'],
   ['notes', '备注'], ['sources', '来源'], ['createdAt', '创建时间'], ['updatedAt', '更新时间'],
 ];

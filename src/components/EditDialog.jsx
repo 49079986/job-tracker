@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { FORM_FIELDS } from '../lib/constants.js';
+import { FORM_FIELDS, INDUSTRIES } from '../lib/constants.js';
 import { emptyRecord } from '../lib/mapping.js';
 import Modal from './Modal.jsx';
 import { StatusSelect } from './StatusBadge.jsx';
@@ -64,6 +64,13 @@ export default function EditDialog({ record, readOnly = false, onSave, onClose }
             <span>{f.label}{f.required && <em aria-hidden="true"> *</em>}</span>
             {f.type === 'status' ? (
               <StatusSelect value={form.status} onChange={(v) => set('status', v)} />
+            ) : f.type === 'industry' ? (
+              <>
+                <input list="industry-options" value={form.industry} placeholder="选择或输入行业" onChange={(e) => set('industry', e.target.value)} />
+                <datalist id="industry-options">
+                  {INDUSTRIES.map((x) => <option key={x} value={x} />)}
+                </datalist>
+              </>
             ) : f.type === 'textarea' ? (
               <textarea rows={3} value={form[f.key]} onChange={(e) => set(f.key, e.target.value)} />
             ) : (
