@@ -42,6 +42,7 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
   const [status, setStatus] = useState('全部');
   const [sort, setSort] = useState('desc');
   const [industries, setIndustries] = useState([]); // 空 = 全部行业
+  const [starredOnly, setStarredOnly] = useState(false);
   const [pageSize, setPageSize] = useState(readPageSize);
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState(null); // null | 'new' | record（只读模式下为查看详情）
@@ -63,6 +64,8 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
     }
   }, []);
   useEffect(() => { load(); }, [load]);
+
+  const starredCount = useMemo(() => records.filter((r) => r.starred).length, [records]);
 
   const counts = useMemo(() => {
     const c = { 全部: records.length };
@@ -90,6 +93,7 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
       (r) =>
         (status === '全部' || r.status === status) &&
         (industries.length === 0 || industries.includes(r.industry || UNCATEGORIZED)) &&
+        (!starredOnly || r.starred) &&
         (!q || normKey(r.company).includes(q) || normKey(r.position).includes(q)),
     );
     const dir = sort === 'desc' ? -1 : 1;
@@ -100,10 +104,10 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
       if (a.appliedDate !== b.appliedDate) return a.appliedDate < b.appliedDate ? -dir : dir;
       return (a.legacyId || a.id).localeCompare(b.legacyId || b.id) * dir;
     });
-  }, [records, query, status, industries, sort]);
+  }, [records, query, status, industries, starredOnly, sort]);
 
   // 分页：筛选、排序或每页条数变化时回到第 1 页
-  useEffect(() => setPage(1), [query, status, industries, sort, pageSize]);
+  useEffect(() => setPage(1), [query, status, industries, starredOnly, sort, pageSize]);
   const totalPages = pageSize ? Math.max(1, Math.ceil(visible.length / pageSize)) : 1;
   const currentPage = Math.min(page, totalPages);
   const start = pageSize ? (currentPage - 1) * pageSize : 0;
@@ -145,6 +149,23 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
     }
   };
 
+  // 精投星标：乐观更新，失败回退
+  const toggleStar = async (rec) => {
+    const next = !rec.starred;
+    setRecords((rs) => rs.map((r) => (r.id === rec.id ? { ...r, starred: next } : r)));
+    markBusy(rec.id, true);
+    try {
+      const saved = await updateRecord(rec.id, { starred: next });
+      setRecords((rs) => rs.map((r) => (r.id === rec.id ? saved : r)));
+      toast(next ? `已标为精投：${rec.position}` : `已取消精投：${rec.position}`);
+    } catch (e) {
+      setRecords((rs) => rs.map((r) => (r.id === rec.id ? { ...r, starred: !next } : r)));
+      toast(e.message, 'error', 6000);
+    } finally {
+      markBusy(rec.id, false);
+    }
+  };
+
   const save = async (form) => {
     if (editing === 'new') {
       const saved = await createRecord(form);
@@ -177,7 +198,7 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
   };
 
   const name = user?.user_metadata?.user_name || user?.user_metadata?.preferred_username || '';
-  const listKey = `${status}|${industries.join(',')}|${sort}|${query}|${pageSize}|${currentPage}`;
+  const listKey = `${status}|${industries.join(',')}|${starredOnly}|${sort}|${query}|${pageSize}|${currentPage}`;
 
   return (
     <div className="app">
@@ -275,6 +296,15 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
             onChange={setIndustries}
           />
           <button
+            className={`btn star-filter ${starredOnly ? 'on' : ''}`}
+            aria-pressed={starredOnly}
+            onClick={() => setStarredOnly((v) => !v)}
+            title="只看标为精投的职位"
+          >
+            <span className="star-icon" aria-hidden="true">{starredOnly ? '★' : '☆'}</span>
+            精投<span className="star-count">{starredCount}</span>
+          </button>
+          <button
             className="btn sort-btn"
             onClick={() => setSort((s) => (s === 'desc' ? 'asc' : 'desc'))}
             aria-label={`按投递日期排序，当前${sort === 'desc' ? '从新到旧' : '从旧到新'}`}
@@ -299,7 +329,11 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
           </div>
         ) : visible.length === 0 ? (
           <div className="empty fade-in" key={listKey}>
-            {records.length === 0 ? (canEdit ? '还没有记录。可以新增一条，或导入 JSON。' : '还没有记录。') : '没有符合条件的记录。'}
+            {records.length === 0
+              ? canEdit ? '还没有记录。可以新增一条，或导入 JSON。' : '还没有记录。'
+              : starredOnly && starredCount === 0
+                ? canEdit ? '还没有精投职位。点岗位名后面的 ☆ 就能收藏。' : '还没有精投职位。'
+                : '没有符合条件的记录。'}
           </div>
         ) : (
           <>
@@ -311,6 +345,7 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
               readOnly={!canEdit}
               busyIds={busyIds}
               onStatus={changeStatus}
+              onStar={toggleStar}
               onEdit={setEditing}
               onDelete={setDeleting}
             />

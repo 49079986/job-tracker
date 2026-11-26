@@ -1,7 +1,5 @@
-import { SOURCE_LABEL } from '../lib/constants.js';
 import { StatusBadge, StatusSelect } from './StatusBadge.jsx';
 
-const sourceText = (r) => (r.sources || []).map((s) => SOURCE_LABEL[s] || s).join(' + ');
 const safeUrl = (u) => (u && /^https?:\/\//i.test(u) ? u : null);
 
 function JobLink({ r }) {
@@ -14,7 +12,29 @@ function JobLink({ r }) {
   );
 }
 
-export default function RecordList({ records, startIndex = 0, mobile, readOnly, busyIds, onStatus, onEdit, onDelete }) {
+/** 精投星标：可编辑时可点击切换；只读时只显示已收藏的实心星 */
+function Star({ r, readOnly, busy, onToggle }) {
+  const on = Boolean(r.starred);
+  if (readOnly) return on ? <span className="star on static" title="精投" aria-label="精投">★</span> : null;
+  return (
+    <button
+      type="button"
+      className={`star ${on ? 'on' : ''}`}
+      aria-pressed={on}
+      aria-label={on ? `取消精投：${r.position}` : `标为精投：${r.position}`}
+      title={on ? '取消精投' : '标为精投'}
+      disabled={busy}
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggle(r);
+      }}
+    >
+      {on ? '★' : '☆'}
+    </button>
+  );
+}
+
+export default function RecordList({ records, startIndex = 0, mobile, readOnly, busyIds, onStatus, onStar, onEdit, onDelete }) {
   const status = (r, label) =>
     readOnly ? <StatusBadge status={r.status} /> : <StatusSelect value={r.status} disabled={busyIds.has(r.id)} onChange={(v) => onStatus(r, v)} label={label} />;
   const actions = (r) =>
@@ -26,24 +46,29 @@ export default function RecordList({ records, startIndex = 0, mobile, readOnly, 
         <button className="btn small danger-ghost" onClick={() => onDelete(r)}>删除</button>
       </>
     );
+  const star = (r) => <Star r={r} readOnly={readOnly} busy={busyIds.has(r.id)} onToggle={onStar} />;
+
   if (mobile) {
     return (
       <ul className="cards">
         {records.map((r, i) => (
-          <li key={r.id} className="card row-anim" style={{ '--i': Math.min(i, 12) }}>
+          <li key={r.id} className={`card row-anim ${r.starred ? 'starred' : ''}`} style={{ '--i': Math.min(i, 12) }}>
             <div className="card-head">
               <div>
-                <div className="company"><span className="seq">#{startIndex + i + 1}</span>{r.company}</div>
-                <div className="position">{r.position}</div>
+                <div className="card-title">
+                  <span className="seq">#{startIndex + i + 1}</span>
+                  <span className="position-title">{r.position}</span>
+                  {star(r)}
+                </div>
+                <div className="company-line">{r.company}</div>
               </div>
               {status(r, `${r.company} 状态`)}
             </div>
-            <dl className="card-meta">
-              <div><dt>投递日期</dt><dd>{r.appliedDate || <span className="muted">未知</span>}</dd></div>
-              <div><dt>职位行业</dt><dd>{r.industry || <span className="muted">未分类</span>}</dd></div>
-              {r.nextAction && <div className="span2"><dt>下一步</dt><dd>{r.nextAction}</dd></div>}
-              <div><dt>来源</dt><dd>{sourceText(r)}</dd></div>
-            </dl>
+            <div className="card-sub">
+              <span>{r.appliedDate || '日期未知'}</span>
+              <span className="dot" aria-hidden="true">·</span>
+              <span>{r.industry || '未分类'}</span>
+            </div>
             <div className="card-actions">
               <JobLink r={r} />
               <span className="grow" />
@@ -60,33 +85,31 @@ export default function RecordList({ records, startIndex = 0, mobile, readOnly, 
         <thead>
           <tr>
             <th className="seq-col">#</th>
-            <th>公司</th>
-            <th>岗位</th>
+            <th>职位</th>
             <th>行业</th>
             <th>状态</th>
             <th className="nowrap">投递日期</th>
-            <th>下一步行动</th>
-            <th>来源</th>
             <th className="actions-col"><span className="sr-only">操作</span></th>
           </tr>
         </thead>
         <tbody>
           {records.map((r, i) => (
-            <tr key={r.id} className="row-anim" style={{ '--i': Math.min(i, 12) }}>
+            <tr key={r.id} className={`row-anim ${r.starred ? 'starred' : ''}`} style={{ '--i': Math.min(i, 12) }}>
               <td className="seq-col muted">{startIndex + i + 1}</td>
-              <td className="company">{r.company}</td>
-              <td className="position-cell">
-                <div>{r.position}</div>
-                <JobLink r={r} />
+              <td className="job-cell">
+                <div className="job-title">
+                  <span className="position-title">{r.position}</span>
+                  {star(r)}
+                </div>
+                <div className="job-sub">
+                  <span className="company-line">{r.company}</span>
+                  <JobLink r={r} />
+                </div>
               </td>
-              <td className="industry">{r.industry || <span className="muted">未分类</span>}</td>
+              <td className="industry"><span className="industry-tag">{r.industry || '未分类'}</span></td>
               <td>{status(r, `${r.company} ${r.position} 状态`)}</td>
               <td className="date-cell nowrap">{r.appliedDate || <span className="muted">未知</span>}</td>
-              <td className="next">{r.nextAction}</td>
-              <td className="nowrap muted">{sourceText(r)}</td>
-              <td className="actions-col nowrap">
-                {actions(r)}
-              </td>
+              <td className="actions-col nowrap">{actions(r)}</td>
             </tr>
           ))}
         </tbody>

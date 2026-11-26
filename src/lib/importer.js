@@ -57,6 +57,7 @@ export async function normalizeRecord(input) {
   r.timeline = Array.isArray(input.timeline) ? input.timeline : [];
   r.flags = Array.isArray(input.flags) ? input.flags.map(String) : [];
   r.raw = input.raw && typeof input.raw === 'object' ? input.raw : null;
+  r.starred = input.starred === true;
 
   if (input.id !== undefined && input.id !== null && input.id !== '') {
     if (!isUuid(String(input.id))) errors.push('id 不是有效的 UUID');

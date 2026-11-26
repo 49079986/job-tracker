@@ -9,6 +9,7 @@ export function fromDb(row) {
   out.sourceRefs = out.sourceRefs || [];
   out.timeline = out.timeline || [];
   out.flags = out.flags || [];
+  out.starred = Boolean(out.starred);
   return out;
 }
 

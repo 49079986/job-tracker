@@ -154,9 +154,9 @@ pre { background: var(--bg-2); border: 1px solid var(--line); padding: 10px 12px
 
 /* 表格 */
 .table-wrap { position: relative; border: 1px solid var(--line); border-radius: 10px; overflow: auto; background: var(--bg-2); }
-.table { width: 100%; min-width: 880px; border-collapse: collapse; font-size: 13.5px; }
-.table th { text-align: left; font-weight: 650; color: var(--text-2); background: var(--panel-2); padding: 12px 14px; border-bottom: 1px solid var(--line-2); font-size: 12px; }
-.table td { padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 13.5px; }
+.table th { text-align: left; font-weight: 650; color: var(--text-2); background: var(--panel-2); padding: 12px 16px; border-bottom: 1px solid var(--line-2); font-size: 12px; }
+.table td { padding: 14px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
 .table tbody tr { transition: background var(--dur) var(--ease); }
 .table tbody tr:nth-child(even) { background: rgb(255 255 255 / 1.2%); }
 .table tbody tr:hover, .table tbody tr:focus-within { background: rgb(118 185 0 / 6%); }
@@ -413,3 +413,48 @@ fieldset.contents:disabled select { opacity: 1; color: var(--text); cursor: defa
   .ms-trigger { width: 100%; max-width: none; min-width: 0; }
   .ms-pop { width: max(100%, 220px); }
 }
+
+/* ---------- 精简表格：职位合并单元格 ---------- */
+.table .job-cell { min-width: 260px; overflow-wrap: anywhere; }
+.job-title { display: flex; align-items: flex-start; gap: 6px; font-size: 14.5px; font-weight: 650; color: var(--text); line-height: 1.45; }
+.job-sub { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-top: 3px; font-size: 12.5px; color: var(--muted); }
+.job-sub .job-link { font-size: 12px; }
+.industry-tag {
+  display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 12px; white-space: nowrap;
+  color: var(--text-2); background: rgb(255 255 255 / 4%); border: 1px solid var(--line);
+}
+.table .industry { min-width: 0; max-width: none; }
+.table tbody tr.starred { background: rgb(118 185 0 / 5%); }
+.table tbody tr.starred .seq-col { box-shadow: inset 2px 0 0 var(--accent); }
+
+/* ---------- 精投星标 ---------- */
+.star {
+  flex-shrink: 0; display: inline-grid; place-items: center; width: 24px; height: 24px; margin-top: -1px; padding: 0;
+  font-size: 17px; line-height: 1; color: var(--muted); background: none; border: 0; border-radius: 6px; cursor: pointer;
+  transition: color var(--dur) var(--ease), transform 120ms var(--ease), background var(--dur) var(--ease);
+}
+.star:hover:not(:disabled) { color: var(--green); background: rgb(118 185 0 / 10%); }
+.star:active:not(:disabled) { transform: scale(0.88); }
+.star.on { color: var(--green); }
+.star.on:not(.static) { animation: star-pop 260ms var(--ease); }
+.star.static { cursor: default; font-size: 15px; }
+.star:disabled { opacity: 0.6; cursor: progress; }
+@keyframes star-pop { 0% { transform: scale(0.7); } 60% { transform: scale(1.2); } 100% { transform: scale(1); } }
+.star-filter { min-height: 44px; flex-shrink: 0; gap: 6px; background: var(--bg-2); white-space: nowrap; }
+.star-filter .star-icon { color: var(--muted); font-size: 16px; line-height: 1; }
+.star-filter .star-count { min-width: 20px; padding: 1px 5px; border-radius: 4px; font-size: 11px; background: rgb(255 255 255 / 6%); font-variant-numeric: tabular-nums; }
+.star-filter.on { border-color: var(--accent); color: var(--text); background: rgb(118 185 0 / 12%); }
+.star-filter.on .star-icon { color: var(--green); }
+
+/* ---------- 手机卡片精简 ---------- */
+.card-title { display: flex; align-items: flex-start; gap: 6px; font-size: 15.5px; font-weight: 700; line-height: 1.4; }
+.card-title .seq { margin-top: 3px; }
+.company-line { color: var(--muted); font-size: 13px; }
+.card .company-line { margin-top: 3px; }
+.card-sub { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 10px; font-size: 13px; color: var(--text-2); }
+.card-sub .dot { color: var(--muted); }
+.card.starred { border-color: rgb(118 185 0 / 40%); }
+@media (max-width: 760px) {
+  .star-filter { flex: 0 0 auto; padding-inline: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .star.on:not(.static) { animation: none; } }

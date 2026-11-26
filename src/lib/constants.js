@@ -38,6 +38,7 @@ export const FIELD_MAP = {
   location: 'location',
   jobType: 'job_type',
   industry: 'industry',
+  starred: 'starred',
   channel: 'channel',
   jobUrl: 'job_url',
   jobUrlLabel: 'job_url_label',
@@ -76,7 +77,7 @@ export const FORM_FIELDS = [
 ];
 
 export const CSV_COLUMNS = [
-  ['id', 'ID'], ['legacyId', '原编号'], ['company', '公司'], ['position', '岗位'], ['status', '状态'],
+  ['id', 'ID'], ['legacyId', '原编号'], ['starred', '精投'], ['company', '公司'], ['position', '岗位'], ['status', '状态'],
   ['appliedDate', '投递日期'], ['nextAction', '下一步行动'], ['lastProgressDate', '最近进展日期'],
   ['lastProgressSummary', '最近进展摘要'], ['jobCode', '岗位编号'], ['location', '工作地点'],
   ['jobType', '工作类型'], ['industry', '职位行业'], ['channel', '投递渠道'], ['jobUrl', '招聘链接'], ['jobUrlLabel', '链接文字'],

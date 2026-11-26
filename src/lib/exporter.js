@@ -21,7 +21,7 @@ export function buildJsonExport(records) {
 
 const csvCell = (v) => {
   if (v === null || v === undefined) return '';
-  let s = Array.isArray(v) ? v.join('|') : String(v);
+  let s = Array.isArray(v) ? v.join('|') : typeof v === 'boolean' ? (v ? '是' : '') : String(v);
   // 防止 Excel 把内容当公式执行
   if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
   return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
