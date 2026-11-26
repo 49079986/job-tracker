@@ -1,17 +1,40 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../supabase.js';
+import { animateExit } from '../lib/motion.js';
 
 /** GitHub 登录按钮（只有白名单账号登录后才能编辑） */
 export default function SignInButton({ className = 'btn', label = '登录以编辑' }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  const departure = useRef(null);
+
+  useEffect(() => {
+    const restore = (event) => {
+      if (!event.persisted) return;
+      departure.current?.cancel();
+      departure.current = null;
+      setBusy(false);
+    };
+    window.addEventListener('pageshow', restore);
+    return () => window.removeEventListener('pageshow', restore);
+  }, []);
 
   const login = async () => {
     setBusy(true);
     setMsg('');
     const redirectTo = window.location.origin + import.meta.env.BASE_URL;
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'github', options: { redirectTo } });
-    if (error) {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'github', options: { redirectTo, skipBrowserRedirect: true },
+      });
+      if (error) throw error;
+      if (!data?.url) throw new Error('未收到登录地址');
+      departure.current = animateExit(document.getElementById('root'), { duration: 145, offset: 0, opacity: 0.2 });
+      await departure.current?.finished;
+      window.location.assign(data.url);
+    } catch (error) {
+      departure.current?.cancel();
+      departure.current = null;
       setMsg('无法跳转到 GitHub 登录：' + error.message);
       setBusy(false);
     }

@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { classifyImport, parseImportText, recordsToWrite } from '../lib/importer.js';
 import { importRecords } from '../lib/repo.js';
 import Modal from './Modal.jsx';
+import Disclosure from './Disclosure.jsx';
 
 
-export default function ImportDialog({ existing, onClose, onDone }) {
+export default function ImportDialog({ existing, onClose, onDone, closing, onExited }) {
   const [fileName, setFileName] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
@@ -64,7 +65,7 @@ export default function ImportDialog({ existing, onClose, onDone }) {
   );
 
   return (
-    <Modal title="导入 JSON" wide busy={busy} onClose={onClose} footer={footer}>
+    <Modal title="导入 JSON" wide busy={busy} onClose={onClose} closing={closing} onExited={onExited} footer={footer}>
       {done ? (
         <div className="fade-in">
           <p className="ok-text">导入完成：写入 {done.written} 条。</p>
@@ -139,8 +140,7 @@ function Stat({ label, value, tone = '' }) {
 function Detail({ title, items }) {
   if (!items.length) return null;
   return (
-    <details className="imp-section">
-      <summary>{title}（{items.length}）</summary>
+    <Disclosure className="imp-section" label={`${title}（${items.length}）`}>
       <ul className="imp-list compact">
         {items.slice(0, 300).map((x) => (
           <li key={x.index}>
@@ -150,6 +150,6 @@ function Detail({ title, items }) {
         ))}
         {items.length > 300 && <li className="muted">……其余 {items.length - 300} 条省略</li>}
       </ul>
-    </details>
+    </Disclosure>
   );
 }

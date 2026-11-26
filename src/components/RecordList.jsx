@@ -1,4 +1,5 @@
 import { StatusBadge, StatusSelect } from './StatusBadge.jsx';
+import { animateExternalLink } from '../lib/motion.js';
 
 const safeUrl = (u) => (u && /^https?:\/\//i.test(u) ? u : null);
 
@@ -6,8 +7,8 @@ function JobLink({ r }) {
   const url = safeUrl(r.jobUrl);
   if (!url) return null;
   return (
-    <a className="job-link" href={url} target="_blank" rel="noopener noreferrer">
-      {r.jobUrlLabel || '链接'} ↗
+    <a className="job-link" href={url} target="_blank" rel="noopener noreferrer" onClick={animateExternalLink}>
+      {r.jobUrlLabel || '链接'} <span className="link-arrow" aria-hidden="true">↗</span>
     </a>
   );
 }
@@ -34,12 +35,12 @@ function Star({ r, readOnly, busy, onToggle }) {
   );
 }
 
-export default function RecordList({ records, startIndex = 0, mobile, readOnly, busyIds, onStatus, onStar, onEdit, onDelete }) {
+export default function RecordList({ records, startIndex = 0, mobile, readOnly, busyIds, onStatus, onStar, onView, onEdit, onDelete }) {
   const status = (r, label) =>
     readOnly ? <StatusBadge status={r.status} /> : <StatusSelect value={r.status} disabled={busyIds.has(r.id)} onChange={(v) => onStatus(r, v)} label={label} />;
   const actions = (r) =>
     readOnly ? (
-      <button className="btn small action-btn" onClick={() => onEdit(r)}>详情</button>
+      <button className="btn small action-btn" aria-haspopup="dialog" onClick={() => onView(r)}>详情</button>
     ) : (
       <>
         <button className="btn small action-btn" onClick={() => onEdit(r)}>编辑</button>
@@ -47,18 +48,23 @@ export default function RecordList({ records, startIndex = 0, mobile, readOnly, 
       </>
     );
   const star = (r) => <Star r={r} readOnly={readOnly} busy={busyIds.has(r.id)} onToggle={onStar} />;
+  const title = (r) => (
+    <button type="button" className="position-title" aria-haspopup="dialog" onClick={() => onView(r)}>
+      {r.position}
+    </button>
+  );
 
   if (mobile) {
     return (
       <ul className="cards">
         {records.map((r, i) => (
-          <li key={r.id} className={`card row-anim ${r.starred ? 'starred' : ''}`} style={{ '--i': Math.min(i, 12) }}>
+          <li key={r.id} className={`card ${r.starred ? 'starred' : ''}`}>
             <div className="card-head">
               <div>
                 <div className="card-title">
                   <span className="card-star">{star(r)}</span>
                   <span className="seq">#{startIndex + i + 1}</span>
-                  <span className="position-title">{r.position}</span>
+                  {title(r)}
                 </div>
                 <div className="company-line">{r.company}</div>
               </div>
@@ -95,12 +101,12 @@ export default function RecordList({ records, startIndex = 0, mobile, readOnly, 
         </thead>
         <tbody>
           {records.map((r, i) => (
-            <tr key={r.id} className={`row-anim ${r.starred ? 'starred' : ''}`} style={{ '--i': Math.min(i, 12) }}>
+            <tr key={r.id} className={r.starred ? 'starred' : undefined}>
               <td className="star-col">{star(r)}</td>
               <td className="seq-col muted">{startIndex + i + 1}</td>
               <td className="job-cell">
                 <div className="job-title">
-                  <span className="position-title">{r.position}</span>
+                  {title(r)}
                 </div>
                 <div className="job-sub">
                   <span className="company-line">{r.company}</span>

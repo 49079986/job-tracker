@@ -1,46 +1,63 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-export default function Modal({ title, onClose, children, footer, wide, busy }) {
-  const ref = useRef(null);
-  useEffect(() => {
+export default function Modal({ title, onClose, onExited, closing, children, footer, wide, busy }) {
+  const overlayRef = useRef(null);
+  const panelRef = useRef(null);
+  useLayoutEffect(() => {
     const prev = document.activeElement;
-    const first = ref.current?.querySelector('input, select, textarea, button:not(.icon-close)');
-    first?.focus();
-    const onKey = (e) => {
-      if (e.key === 'Escape' && !busy) onClose();
-      if (e.key === 'Tab') {
-        const els = [...ref.current.querySelectorAll('button, input, select, textarea, a[href]')].filter((x) => !x.disabled);
-        if (!els.length) return;
-        const [a, b] = [els[0], els[els.length - 1]];
-        if (e.shiftKey && document.activeElement === a) { e.preventDefault(); b.focus(); }
-        else if (!e.shiftKey && document.activeElement === b) { e.preventDefault(); a.focus(); }
-      }
-    };
-    document.addEventListener('keydown', onKey);
     document.body.classList.add('modal-open');
+    panelRef.current?.focus({ preventScroll: true });
     return () => {
-      document.removeEventListener('keydown', onKey);
       document.body.classList.remove('modal-open');
-      prev?.focus?.();
+      if (prev?.isConnected) prev.focus({ preventScroll: true });
     };
-  }, [onClose, busy]);
+  }, []);
+
+  useEffect(() => {
+    if (!closing) return;
+    const animations = [overlayRef.current, panelRef.current].flatMap((element) => element?.getAnimations?.() ?? []);
+    let active = true;
+    Promise.allSettled(animations.map((animation) => animation.finished)).then(() => {
+      if (active) onExited();
+    });
+    return () => { active = false; };
+  }, [closing, onExited]);
+
+  const dismiss = () => { if (!busy && !closing) onClose(); };
+  const onKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      dismiss();
+    }
+    if (e.key !== 'Tab') return;
+    const panel = panelRef.current;
+    const focusable = [...panel.querySelectorAll('button, input, select, textarea, a[href], summary')]
+      .filter((node) => !node.matches(':disabled') && !node.closest('[inert]') && node.getClientRects().length);
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    const focused = document.activeElement;
+    if (!first || (e.shiftKey ? focused === first || focused === panel : focused === last)) {
+      e.preventDefault();
+      (e.shiftKey ? last : first)?.focus();
+    }
+  };
 
   return (
-    <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
-      <div className={`modal ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} ref={ref}>
+    <div className="overlay" data-closing={Boolean(closing)} ref={overlayRef} onClick={(e) => e.target === e.currentTarget && dismiss()}>
+      <div className={`modal ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} tabIndex={-1} ref={panelRef} onKeyDown={onKeyDown}>
         <header className="modal-head">
           <h2>{title}</h2>
-          <button className="icon-close" onClick={onClose} disabled={busy} aria-label="关闭">×</button>
+          <button className="icon-close" type="button" onClick={dismiss} disabled={busy || closing} aria-label="关闭">×</button>
         </header>
-        <div className="modal-body">{children}</div>
-        {footer && <footer className="modal-foot">{footer}</footer>}
+        <div className="modal-body" inert={Boolean(closing)}>{children}</div>
+        {footer && <footer className="modal-foot" inert={Boolean(closing)}>{footer}</footer>}
       </div>
     </div>
   );
 }
 
-export function ConfirmDialog({ title, message, confirmText = '确认', danger, onConfirm, onClose }) {
-  const [busy, setBusy] = useStateSafe(false);
+export function ConfirmDialog({ title, message, confirmText = '确认', danger, onConfirm, onClose, closing, onExited }) {
+  const [busy, setBusy] = useState(false);
   const go = async () => {
     setBusy(true);
     try {
@@ -53,6 +70,8 @@ export function ConfirmDialog({ title, message, confirmText = '确认', danger, 
     <Modal
       title={title}
       onClose={onClose}
+      closing={closing}
+      onExited={onExited}
       busy={busy}
       footer={
         <>
@@ -66,11 +85,4 @@ export function ConfirmDialog({ title, message, confirmText = '确认', danger, 
       <p>{message}</p>
     </Modal>
   );
-}
-
-function useStateSafe(v) {
-  const [s, set] = useState(v);
-  const mounted = useRef(true);
-  useEffect(() => () => { mounted.current = false; }, []);
-  return [s, (x) => mounted.current && set(x)];
 }

@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 import { FORM_FIELDS, INDUSTRIES, SOURCE_LABEL } from '../lib/constants.js';
 import { emptyRecord } from '../lib/mapping.js';
+import { animateExternalLink } from '../lib/motion.js';
 import Modal from './Modal.jsx';
+import Disclosure from './Disclosure.jsx';
 import { StatusBadge, StatusSelect } from './StatusBadge.jsx';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -73,8 +75,9 @@ function DetailView({ record: r }) {
           <dt>招聘链接</dt>
           <dd>
             {url ? (
-              <a className="dd-link" href={url} target="_blank" rel="noopener noreferrer">
-                {r.jobUrlLabel || '打开链接'} ↗<span className="dd-url">{url}</span>
+              <a className="dd-link" href={url} target="_blank" rel="noopener noreferrer" onClick={animateExternalLink}>
+                <span>{r.jobUrlLabel || '打开链接'} <span className="link-arrow" aria-hidden="true">↗</span></span>
+                <span className="dd-url">{url}</span>
               </a>
             ) : (
               <span className="dd-empty">未填写</span>
@@ -83,8 +86,7 @@ function DetailView({ record: r }) {
         </div>
       </dl>
 
-      <details className="dd-more">
-        <summary>更多信息</summary>
+      <Disclosure className="dd-more" label="更多信息">
         <div className="dd-more-body">
           {moreRows.length > 0 && (
             <dl className="dd-grid compact">
@@ -103,12 +105,12 @@ function DetailView({ record: r }) {
             {sourceText(r) ? ` · 来源 ${sourceText(r)}` : ''}
           </p>
         </div>
-      </details>
+      </Disclosure>
     </div>
   );
 }
 
-export default function EditDialog({ record, readOnly = false, onSave, onClose }) {
+export default function EditDialog({ record, readOnly = false, onSave, onClose, closing, onExited }) {
   const initial = useMemo(() => {
     const base = emptyRecord();
     if (record) for (const k of Object.keys(base)) base[k] = record[k] ?? '';
@@ -119,7 +121,6 @@ export default function EditDialog({ record, readOnly = false, onSave, onClose }
   const [error, setError] = useState('');
   const [touched, setTouched] = useState(false);
   const moreFilled = MORE.some((f) => String(initial[f.key] || '').trim());
-  const [moreOpen, setMoreOpen] = useState(false);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const problems = [];
@@ -176,6 +177,8 @@ export default function EditDialog({ record, readOnly = false, onSave, onClose }
       wide
       busy={busy}
       onClose={onClose}
+      closing={closing}
+      onExited={onExited}
       footer={
         readOnly ? (
           <button className="btn" onClick={onClose}>关闭</button>
@@ -193,11 +196,7 @@ export default function EditDialog({ record, readOnly = false, onSave, onClose }
       ) : (
         <form className="edit-form" onSubmit={submit} noValidate>
           <div className="form-grid roomy">{MAIN.map(field)}</div>
-          <details className="dd-more" open={moreOpen} onToggle={(e) => setMoreOpen(e.currentTarget.open)}>
-            <summary>
-              更多信息
-              {!moreOpen && moreFilled && <span className="dd-hint">已有内容</span>}
-            </summary>
+          <Disclosure className="dd-more" label="更多信息" hint={moreFilled && <span className="dd-hint">已有内容</span>}>
             <div className="dd-more-body">
               <div className="form-grid roomy">{MORE.map(field)}</div>
               {record && <Timeline items={record.timeline} />}
@@ -209,7 +208,7 @@ export default function EditDialog({ record, readOnly = false, onSave, onClose }
                 </p>
               )}
             </div>
-          </details>
+          </Disclosure>
           {touched && problems.length > 0 && <p className="error-text" role="alert">{problems.join('；')}</p>}
           <button type="submit" hidden />
         </form>

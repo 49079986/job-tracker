@@ -84,7 +84,7 @@ pre { background: var(--bg-2); border: 1px solid var(--line); padding: 10px 12px
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ---------- 主界面 ---------- */
-.app { max-width: 1384px; margin: 0 auto; padding: 0 clamp(20px, 3.35vw, 48px) 56px; }
+.app { max-width: 1920px; margin: 0 auto; padding: 0 clamp(20px, 3.35vw, 56px) 56px; animation: fade 170ms var(--ease); }
 .topbar {
   position: sticky; top: 0; z-index: 5;
   display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
@@ -154,9 +154,10 @@ pre { background: var(--bg-2); border: 1px solid var(--line); padding: 10px 12px
 
 /* 表格 */
 .table-wrap { position: relative; border: 1px solid var(--line); border-radius: 10px; overflow: auto; background: var(--bg-2); }
-.table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 13.5px; }
-.table th { text-align: left; font-weight: 650; color: var(--text-2); background: var(--panel-2); padding: 12px 16px; border-bottom: 1px solid var(--line-2); font-size: 12px; }
-.table td { padding: 14px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 14px; }
+.table th, .table td { padding-inline: clamp(14px, 1.15vw, 22px); }
+.table th { text-align: left; font-weight: 650; color: var(--text-2); background: var(--panel-2); padding-block: 12px; border-bottom: 1px solid var(--line-2); font-size: 13px; }
+.table td { padding-block: 15px; border-bottom: 1px solid var(--line); vertical-align: middle; }
 .table tbody tr { transition: background var(--dur) var(--ease); }
 .table tbody tr:nth-child(even) { background: rgb(255 255 255 / 1.2%); }
 .table tbody tr:hover, .table tbody tr:focus-within { background: rgb(118 185 0 / 6%); }
@@ -171,6 +172,8 @@ pre { background: var(--bg-2); border: 1px solid var(--line); padding: 10px 12px
 .action-btn { background: transparent; }
 .job-link { font-size: 12.5px; text-decoration: none; color: var(--green); }
 .job-link:hover { text-decoration: underline; }
+.link-arrow { display: inline-block; transition: transform var(--dur) var(--ease); }
+a:hover .link-arrow, a:focus-visible .link-arrow, a:active .link-arrow { transform: translate(2px, -2px); }
 
 .status-select {
   appearance: none; -webkit-appearance: none;
@@ -205,8 +208,11 @@ pre { background: var(--bg-2); border: 1px solid var(--line); padding: 10px 12px
 .card-actions .btn { min-height: 36px; }
 
 /* ---------- 弹窗 ---------- */
-.overlay { position: fixed; inset: 0; z-index: 50; background: rgb(0 0 0 / 72%); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 16px; animation: fade var(--dur) var(--ease); }
-.modal { width: min(460px, 100%); max-height: calc(100vh - 32px); display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line-2); border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); animation: pop var(--dur) var(--ease); }
+.overlay { position: fixed; inset: 0; z-index: 50; background: rgb(0 0 0 / 72%); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 16px; overflow: hidden; animation: fade 190ms var(--ease) both; }
+.modal { width: min(460px, 100%); max-height: calc(100vh - 32px); display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line-2); border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); --dialog-offset: translateY(14px) scale(0.985); animation: dialog-in 240ms var(--ease) both; }
+.modal:focus { outline: none; }
+.overlay[data-closing='true'] { animation: fade-out 165ms ease-in both; }
+.overlay[data-closing='true'] .modal { animation: dialog-out 165ms ease-in both; }
 .modal.wide { width: min(820px, 100%); }
 .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--line); }
 .modal-head h2 { margin: 0; font-size: 17px; }
@@ -247,7 +253,7 @@ pre { background: var(--bg-2); border: 1px solid var(--line); padding: 10px 12px
 .stat.warn .stat-v { color: var(--amber); }
 .stat.error .stat-v { color: var(--red); }
 .imp-section { margin-top: 14px; }
-.imp-section > summary { cursor: pointer; color: var(--text-2); }
+.imp-section > .disclosure-trigger { padding: 6px 0; }
 .imp-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 .imp-head h3 { font-size: 14.5px; margin: 0; color: var(--amber); }
 .imp-bulk { display: flex; gap: 6px; }
@@ -268,14 +274,33 @@ pre { background: var(--bg-2); border: 1px solid var(--line); padding: 10px 12px
 
 /* ---------- 动效 ---------- */
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-@keyframes pop { from { opacity: 0; transform: translateY(8px) scale(0.985); } to { opacity: 1; transform: none; } }
+@keyframes dialog-in { from { opacity: 0; transform: var(--dialog-offset); } to { opacity: 1; transform: none; } }
+@keyframes dialog-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: var(--dialog-offset); } }
+@keyframes results-in { from { opacity: 0.15; transform: translateY(var(--result-offset, 5px)); } to { opacity: 1; transform: none; } }
 .fade-in { animation: rise var(--dur) var(--ease) both; }
-.row-anim { animation: rise 180ms var(--ease) both; animation-delay: calc(var(--i, 0) * 12ms); }
+.results-motion { animation: results-in 210ms var(--ease) both; }
+.results-motion[data-direction='forward'] { --result-offset: 10px; }
+.results-motion[data-direction='backward'] { --result-offset: -10px; }
+.popup-motion {
+  opacity: 0; transform: translateY(-5px); visibility: hidden; pointer-events: none;
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease), visibility 0s var(--dur);
+}
+.popup-motion[data-open='true'] { opacity: 1; transform: none; visibility: visible; pointer-events: auto; transition-delay: 0s; }
+.disclosure-trigger {
+  display: flex; width: 100%; align-items: center; gap: 10px; padding: 0; background: none; border: 0;
+  color: var(--text-2); font: inherit; text-align: left; cursor: pointer;
+}
+.disclosure-panel { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 205ms var(--ease), opacity 160ms var(--ease); }
+.disclosure[data-open='true'] > .disclosure-panel { grid-template-rows: 1fr; opacity: 1; }
+.disclosure-inner { min-height: 0; overflow: hidden; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
   .spinner { animation: spin 1.6s linear infinite !important; }
+  .app, .results-motion, .overlay, .modal { animation: none !important; }
+  .popup-motion { transition-delay: 0s !important; }
 }
 
 /* ---------- 手机 ---------- */
@@ -305,7 +330,7 @@ pre { background: var(--bg-2); border: 1px solid var(--line); padding: 10px 12px
   .summary-grid { grid-template-columns: repeat(3, 1fr); }
   .imp-list > li { flex-direction: column; align-items: stretch; }
   .overlay { padding: 0; align-items: end; }
-  .modal, .modal.wide { width: 100%; max-height: min(92vh, 92dvh); border-radius: 14px 14px 0 0; padding-bottom: env(safe-area-inset-bottom); }
+  .modal, .modal.wide { width: 100%; max-height: min(92vh, 92dvh); border-radius: 14px 14px 0 0; padding-bottom: env(safe-area-inset-bottom); --dialog-offset: translateY(34px); }
   .menu { left: 0; right: auto; }
 }
 @media (max-width: 460px) {
@@ -416,7 +441,13 @@ fieldset.contents:disabled select { opacity: 1; color: var(--text); cursor: defa
 
 /* ---------- 精简表格：职位合并单元格 ---------- */
 .table .job-cell { min-width: 260px; overflow-wrap: anywhere; }
-.job-title { display: flex; align-items: flex-start; gap: 6px; font-size: 14.5px; font-weight: 650; color: var(--text); line-height: 1.45; }
+.job-title { display: flex; align-items: flex-start; gap: 6px; font-size: 16px; font-weight: 650; color: var(--text); line-height: 1.45; }
+.position-title {
+  min-width: 0; padding: 0; border: 0; border-radius: 3px; background: none; color: inherit;
+  font: inherit; text-align: left; overflow-wrap: anywhere; cursor: pointer;
+  transition: color var(--dur) var(--ease);
+}
+.position-title:hover, .position-title:focus-visible { color: var(--green); text-decoration: underline; text-underline-offset: 0.2em; }
 .job-sub { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-top: 3px; font-size: 12.5px; color: var(--muted); }
 .job-sub .job-link { font-size: 12px; }
 .industry-tag {
@@ -510,20 +541,19 @@ fieldset.contents:disabled select { opacity: 1; color: var(--text); cursor: defa
 
 /* 折叠面板「更多信息」 */
 .dd-more { margin-top: 18px; border: 1px solid var(--line); border-radius: 10px; background: rgb(255 255 255 / 1.5%); }
-.dd-more > summary {
+.dd-more > .disclosure-trigger {
   display: flex; align-items: center; gap: 10px; padding: 14px 16px; cursor: pointer; list-style: none;
   font-size: 15px; font-weight: 650; color: var(--text-2); border-radius: 10px; transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
 }
-.dd-more > summary::-webkit-details-marker { display: none; }
-.dd-more > summary::before {
+.dd-more > .disclosure-trigger::before {
   content: ''; width: 8px; height: 8px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent);
   transform: rotate(-45deg); transition: transform var(--dur) var(--ease); margin-right: 2px;
 }
-.dd-more[open] > summary::before { transform: rotate(45deg); }
-.dd-more > summary:hover { color: var(--text); background: rgb(118 185 0 / 6%); }
-.dd-more[open] > summary { color: var(--text); border-bottom: 1px solid var(--line); border-radius: 10px 10px 0 0; }
+.dd-more[data-open='true'] > .disclosure-trigger::before { transform: rotate(45deg); }
+.dd-more > .disclosure-trigger:hover { color: var(--text); background: rgb(118 185 0 / 6%); }
+.dd-more[data-open='true'] > .disclosure-trigger { color: var(--text); border-radius: 10px 10px 0 0; }
 .dd-hint { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--muted); }
-.dd-more-body { padding: 16px; animation: rise var(--dur) var(--ease) both; }
+.dd-more-body { padding: 16px; border-top: 1px solid var(--line); }
 .dd-section { margin-top: 16px; }
 .dd-section h4 { margin: 0 0 10px; font-size: 14px; color: var(--text-2); }
 .dd-timeline { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; border-left: 2px solid #384629; padding-left: 16px; }

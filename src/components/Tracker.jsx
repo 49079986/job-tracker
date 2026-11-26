@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { INDUSTRIES, PAGE_SIZES, STATUSES, UNCATEGORIZED } from '../lib/constants.js';
 import { createRecord, deleteRecord, listAll, updateRecord } from '../lib/repo.js';
 import { buildCsvExport, buildJsonExport, download, exportFilename } from '../lib/exporter.js';
 import { normKey } from '../lib/importer.js';
+import { animateExit, prefersReducedMotion } from '../lib/motion.js';
 import { useToast } from './Toast.jsx';
 import { ConfirmDialog } from './Modal.jsx';
 import EditDialog from './EditDialog.jsx';
@@ -45,12 +46,18 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
   const [starredOnly, setStarredOnly] = useState(false);
   const [pageSize, setPageSize] = useState(readPageSize);
   const [page, setPage] = useState(1);
-  const [editing, setEditing] = useState(null); // null | 'new' | record（只读模式下为查看详情）
-  const [deleting, setDeleting] = useState(null);
-  const [importing, setImporting] = useState(false);
+  const [pageDirection, setPageDirection] = useState('none');
+  const [dialog, setDialog] = useState(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [busyIds, setBusyIds] = useState(() => new Set());
   const mobile = useMedia('(max-width: 760px)');
+  const contentRef = useRef(null);
+  const headingRef = useRef(null);
+  const resultsRef = useRef(null);
+  const pageExit = useRef(null);
+
+  const closeDialog = () => setDialog((current) => current && { ...current, closing: true });
+  const removeDialog = useCallback(() => setDialog((current) => current?.closing ? null : current), []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -107,11 +114,16 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
   }, [records, query, status, industries, starredOnly, sort]);
 
   // 分页：筛选、排序或每页条数变化时回到第 1 页
-  useEffect(() => setPage(1), [query, status, industries, starredOnly, sort, pageSize]);
+  useEffect(() => {
+    setPage(1);
+    setPageDirection('none');
+  }, [query, status, industries, starredOnly, sort, pageSize]);
   const totalPages = pageSize ? Math.max(1, Math.ceil(visible.length / pageSize)) : 1;
   const currentPage = Math.min(page, totalPages);
   const start = pageSize ? (currentPage - 1) * pageSize : 0;
   const pageItems = pageSize ? visible.slice(start, start + pageSize) : visible;
+  const listKey = JSON.stringify([status, industries, starredOnly, sort, query, pageSize, currentPage]);
+  useEffect(() => () => pageExit.current?.cancel(), [listKey, loading, totalPages, mobile]);
   const changePageSize = (v) => {
     setPageSize(v);
     try {
@@ -120,9 +132,24 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
       /* 浏览器不允许存储时只在本次生效 */
     }
   };
-  const goPage = (p) => {
+  const goPage = async (p) => {
+    if (p === currentPage || pageExit.current) return;
+    const forward = p > currentPage;
+    const animation = animateExit(resultsRef.current, { duration: 105, offset: forward ? -6 : 6, opacity: 0.3 });
+    if (animation) {
+      pageExit.current = animation;
+      try {
+        await animation.finished;
+      } catch {
+        return;
+      } finally {
+        pageExit.current = null;
+      }
+    }
+    setPageDirection(forward ? 'forward' : 'backward');
     setPage(p);
-    document.querySelector('.content')?.scrollIntoView({ block: 'start', behavior: 'auto' });
+    headingRef.current?.focus({ preventScroll: true });
+    contentRef.current?.scrollIntoView({ block: 'start', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
   };
 
   const markBusy = (id, on) =>
@@ -167,24 +194,25 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
   };
 
   const save = async (form) => {
-    if (editing === 'new') {
+    if (dialog.kind === 'new') {
       const saved = await createRecord(form);
       setRecords((rs) => [...rs, saved]);
       toast('已新增记录');
     } else {
-      const saved = await updateRecord(editing.id, form);
+      const saved = await updateRecord(dialog.record.id, form);
       setRecords((rs) => rs.map((r) => (r.id === saved.id ? saved : r)));
       toast('已保存修改');
     }
-    setEditing(null);
+    closeDialog();
   };
 
   const remove = async () => {
+    const { id } = dialog.record;
     try {
-      await deleteRecord(deleting.id);
-      setRecords((rs) => rs.filter((r) => r.id !== deleting.id));
+      await deleteRecord(id);
+      setRecords((rs) => rs.filter((r) => r.id !== id));
       toast('已删除记录');
-      setDeleting(null);
+      closeDialog();
     } catch (e) {
       toast(e.message, 'error', 6000);
     }
@@ -198,7 +226,7 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
   };
 
   const name = user?.user_metadata?.user_name || user?.user_metadata?.preferred_username || '';
-  const listKey = `${status}|${industries.join(',')}|${starredOnly}|${sort}|${query}|${pageSize}|${currentPage}`;
+  const dialogProps = { closing: dialog?.closing, onClose: closeDialog, onExited: removeDialog };
 
   return (
     <div className="app">
@@ -210,18 +238,16 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
         <div className="top-actions">
           {canEdit && (
             <>
-              <button className="btn primary" onClick={() => setEditing('new')}>＋ 新增</button>
-              <button className="btn" onClick={() => setImporting(true)}>导入 JSON</button>
+              <button className="btn primary" onClick={() => setDialog({ kind: 'new' })}>＋ 新增</button>
+              <button className="btn" onClick={() => setDialog({ kind: 'import' })}>导入 JSON</button>
               <div className="menu-wrap">
                 <button className="btn" aria-haspopup="menu" aria-expanded={exportOpen} onClick={() => setExportOpen((v) => !v)}>
                   导出全部记录 ▾
                 </button>
-                {exportOpen && (
-                  <div className="menu fade-in" role="menu" onMouseLeave={() => setExportOpen(false)}>
-                    <button role="menuitem" onClick={() => doExport('json')}>JSON（可重新导入恢复）</button>
-                    <button role="menuitem" onClick={() => doExport('csv')}>CSV（Excel 打开）</button>
-                  </div>
-                )}
+                <div className="menu popup-motion" data-open={exportOpen} inert={!exportOpen} role="menu" onMouseLeave={() => setExportOpen(false)}>
+                  <button role="menuitem" onClick={() => doExport('json')}>JSON（可重新导入恢复）</button>
+                  <button role="menuitem" onClick={() => doExport('csv')}>CSV（Excel 打开）</button>
+                </div>
               </div>
             </>
           )}
@@ -253,12 +279,12 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
         </dl>
       </section>
 
-      <main className="content">
+      <main className="content" ref={contentRef}>
         <div className="list-meta">
           <div className="list-title">
-            <h2>投递记录</h2>
+            <h2 tabIndex={-1} ref={headingRef}>投递记录</h2>
             {!loading && !loadError && (
-              <p className="result-count">
+              <p className="result-count" aria-live="polite">
                 共 {visible.length} 条{visible.length !== records.length ? `（全部 ${records.length} 条）` : ''}
                 {visible.length > 0 && pageSize > 0 && totalPages > 1 && ` · 第 ${start + 1}–${Math.min(start + pageSize, visible.length)} 条`}
               </p>
@@ -328,7 +354,7 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
             <button className="btn" onClick={load}>重试</button>
           </div>
         ) : visible.length === 0 ? (
-          <div className="empty fade-in" key={listKey}>
+          <div className="empty results-motion" key={listKey}>
             {records.length === 0
               ? canEdit ? '还没有记录。可以新增一条，或导入 JSON。' : '还没有记录。'
               : starredOnly && starredCount === 0
@@ -337,45 +363,47 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
           </div>
         ) : (
           <>
-            <RecordList
-              key={listKey}
-              records={pageItems}
-              startIndex={start}
-              mobile={mobile}
-              readOnly={!canEdit}
-              busyIds={busyIds}
-              onStatus={changeStatus}
-              onStar={toggleStar}
-              onEdit={setEditing}
-              onDelete={setDeleting}
-            />
+            <div className="results-motion" key={listKey} data-direction={pageDirection} ref={resultsRef}>
+              <RecordList
+                records={pageItems}
+                startIndex={start}
+                mobile={mobile}
+                readOnly={!canEdit}
+                busyIds={busyIds}
+                onStatus={changeStatus}
+                onStar={toggleStar}
+                onView={(record) => setDialog({ kind: 'view', record })}
+                onEdit={(record) => setDialog({ kind: 'edit', record })}
+                onDelete={(record) => setDialog({ kind: 'delete', record })}
+              />
+            </div>
             <Pagination page={currentPage} totalPages={totalPages} onChange={goPage} />
           </>
         )}
       </main>
 
-      {editing && (
+      {(dialog?.kind === 'view' || (canEdit && (dialog?.kind === 'new' || dialog?.kind === 'edit'))) && (
         <EditDialog
-          record={editing === 'new' ? null : editing}
-          readOnly={!canEdit}
+          record={dialog.record}
+          readOnly={dialog.kind === 'view'}
           onSave={save}
-          onClose={() => setEditing(null)}
+          {...dialogProps}
         />
       )}
-      {canEdit && deleting && (
+      {canEdit && dialog?.kind === 'delete' && (
         <ConfirmDialog
           title="删除记录"
           danger
           confirmText="删除"
-          message={`确定删除「${deleting.company} · ${deleting.position}」吗？删除后无法撤销，建议先导出备份。`}
+          message={`确定删除「${dialog.record.company} · ${dialog.record.position}」吗？删除后无法撤销，建议先导出备份。`}
           onConfirm={remove}
-          onClose={() => setDeleting(null)}
+          {...dialogProps}
         />
       )}
-      {canEdit && importing && (
+      {canEdit && dialog?.kind === 'import' && (
         <ImportDialog
           existing={records}
-          onClose={() => setImporting(false)}
+          {...dialogProps}
           onDone={async (n) => {
             toast(`导入完成：写入 ${n} 条`);
             await load();
