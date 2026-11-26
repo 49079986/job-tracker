@@ -9,6 +9,7 @@ import EditDialog from './EditDialog.jsx';
 import ImportDialog from './ImportDialog.jsx';
 import RecordList from './RecordList.jsx';
 import useMedia from './useMedia.js';
+import avatar from '../assets/avatar.js';
 import SignInButton from './Login.jsx';
 import NotAllowedBanner from './Unauthorized.jsx';
 
@@ -126,7 +127,7 @@ export default function Tracker({ user, canEdit, notAllowed, authError, onSignOu
     <div className="app">
       <header className="topbar">
         <div className="brand-row">
-          <span className="logo-mark small" aria-hidden="true" />
+          <img className="logo-mark small avatar" src={avatar} alt="" aria-hidden="true" width="32" height="32" />
           <h1 className="brand">求职投递管理</h1>
         </div>
         <div className="top-actions">

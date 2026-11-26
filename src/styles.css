@@ -77,6 +77,10 @@ pre { background: var(--bg-2); border: 1px solid var(--line); padding: 10px 12px
 .brand { font-size: 20px; font-weight: 800; letter-spacing: 0.02em; margin: 0; }
 .logo-mark { width: 44px; height: 44px; margin: 0 auto 4px; border-radius: 8px; background: linear-gradient(135deg, var(--green), #4c7a00); box-shadow: 0 0 24px rgba(118,185,0,0.35); }
 .logo-mark.small { width: 22px; height: 22px; margin: 0; border-radius: 5px; box-shadow: none; }
+.logo-mark.avatar {
+  width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: none;
+  box-shadow: 0 0 0 2px var(--green), 0 0 12px rgba(118,185,0,0.35);
+}
 .uuid-box { display: flex; gap: 8px; align-items: center; background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px; }
 .uuid-box code { flex: 1; word-break: break-all; color: var(--green); font-size: 13px; text-align: left; }
 .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--line-2); border-top-color: var(--green); animation: spin 0.8s linear infinite; margin: 0 auto; }
