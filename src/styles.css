@@ -425,7 +425,7 @@ fieldset.contents:disabled select { opacity: 1; color: var(--text); cursor: defa
 }
 .table .industry { min-width: 0; max-width: none; }
 .table tbody tr.starred { background: rgb(118 185 0 / 5%); }
-.table tbody tr.starred .seq-col { box-shadow: inset 2px 0 0 var(--accent); }
+.table tbody tr.starred .star-col { box-shadow: inset 2px 0 0 var(--accent); }
 
 /* ---------- 精投星标 ---------- */
 .star {
@@ -458,3 +458,97 @@ fieldset.contents:disabled select { opacity: 1; color: var(--text); cursor: defa
   .star-filter { flex: 0 0 auto; padding-inline: 10px; }
 }
 @media (prefers-reduced-motion: reduce) { .star.on:not(.static) { animation: none; } }
+
+/* 星标独立一列（最左侧） */
+.table .star-col { width: 1%; padding-left: 10px; padding-right: 0; text-align: center; }
+.table th.star-col { color: var(--muted); font-size: 13px; }
+.table .star-col + .seq-col { padding-left: 6px; }
+.table .star-col .star { margin-top: 0; }
+.table .star-col .star.static { display: inline-grid; place-items: center; width: 24px; height: 24px; }
+.card-star { display: inline-flex; min-width: 24px; margin-left: -4px; }
+.card-star:empty { display: none; }
+@media (max-width: 560px) {
+  .filters .ms { flex: 1 1 100%; }
+  .filters .star-filter, .filters .sort-btn { flex: 1 1 0; justify-content: center; }
+}
+
+/* ---------- 职位详情 / 编辑窗口（宽松排版、黑绿强调） ---------- */
+.modal.wide { width: min(880px, 100%); }
+.modal-head { padding: 18px 24px; }
+.modal-head h2 { font-size: 18px; display: flex; align-items: center; gap: 10px; }
+.modal-head h2::before { content: ''; width: 4px; height: 18px; border-radius: 2px; background: var(--accent); }
+.modal-body { padding: 22px 24px 24px; font-size: 15.5px; }
+.modal-foot { padding: 14px 24px; }
+.modal-foot .btn { min-height: 40px; padding: 8px 18px; font-size: 14.5px; }
+
+.dd-hero {
+  position: relative; overflow: hidden; padding: 20px 22px; margin-bottom: 22px; border-radius: 12px;
+  background: radial-gradient(ellipse at 100% 0%, rgb(118 185 0 / 22%), transparent 60%), linear-gradient(120deg, #171d12, #121510);
+  border: 1px solid #384629; border-left: 3px solid var(--accent);
+}
+.dd-company { color: var(--text-2); font-size: 14px; letter-spacing: 0.02em; }
+.dd-title { display: flex; align-items: baseline; gap: 10px; margin: 6px 0 12px; font-size: 23px; line-height: 1.35; font-weight: 800; color: #fff; overflow-wrap: anywhere; }
+.dd-star { color: var(--green); font-size: 20px; }
+.dd-tags { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.dd-tags .badge { font-size: 13px; padding: 4px 11px; }
+.dd-tags .industry-tag { font-size: 13px; padding: 3px 10px; }
+
+.dd-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.dd-grid > div { padding: 14px 16px; border-radius: 10px; background: var(--bg-2); border: 1px solid var(--line); min-width: 0; }
+.dd-grid > div.span2 { grid-column: span 2; }
+.dd-grid dt { margin-bottom: 6px; font-size: 12.5px; font-weight: 600; color: var(--muted); letter-spacing: 0.03em; }
+.dd-grid dd { margin: 0; font-size: 16px; line-height: 1.55; color: var(--text); overflow-wrap: anywhere; }
+.dd-grid dd.pre { white-space: pre-wrap; font-size: 15px; color: var(--text-2); }
+.dd-grid.compact > div { padding: 12px 14px; }
+.dd-empty { color: var(--muted); font-size: 14.5px; }
+.dd-dates { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-variant-numeric: tabular-nums; font-size: 17px !important; }
+.dd-arrow { color: var(--accent); font-weight: 700; }
+.dd-salary { color: var(--green) !important; font-weight: 700; font-size: 17px !important; }
+.dd-link { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; color: var(--green); font-weight: 600; text-decoration: none; }
+.dd-link:hover { text-decoration: underline; }
+.dd-url { color: var(--muted); font-weight: 400; font-size: 13px; overflow-wrap: anywhere; }
+
+/* 折叠面板「更多信息」 */
+.dd-more { margin-top: 18px; border: 1px solid var(--line); border-radius: 10px; background: rgb(255 255 255 / 1.5%); }
+.dd-more > summary {
+  display: flex; align-items: center; gap: 10px; padding: 14px 16px; cursor: pointer; list-style: none;
+  font-size: 15px; font-weight: 650; color: var(--text-2); border-radius: 10px; transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.dd-more > summary::-webkit-details-marker { display: none; }
+.dd-more > summary::before {
+  content: ''; width: 8px; height: 8px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent);
+  transform: rotate(-45deg); transition: transform var(--dur) var(--ease); margin-right: 2px;
+}
+.dd-more[open] > summary::before { transform: rotate(45deg); }
+.dd-more > summary:hover { color: var(--text); background: rgb(118 185 0 / 6%); }
+.dd-more[open] > summary { color: var(--text); border-bottom: 1px solid var(--line); border-radius: 10px 10px 0 0; }
+.dd-hint { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--muted); }
+.dd-more-body { padding: 16px; animation: rise var(--dur) var(--ease) both; }
+.dd-section { margin-top: 16px; }
+.dd-section h4 { margin: 0 0 10px; font-size: 14px; color: var(--text-2); }
+.dd-timeline { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; border-left: 2px solid #384629; padding-left: 16px; }
+.dd-timeline li { position: relative; font-size: 14.5px; line-height: 1.6; color: var(--text-2); }
+.dd-timeline li::before { content: ''; position: absolute; left: -22px; top: 8px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--panel); }
+.dd-timeline .t-date { color: var(--green); margin-right: 8px; font-variant-numeric: tabular-nums; }
+.dd-meta { margin: 16px 0 0; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+
+/* 编辑表单：更大字号与间距 */
+.edit-form .form-grid.roomy { gap: 18px 20px; }
+.edit-form .field { gap: 7px; font-size: 13.5px; font-weight: 600; color: var(--text-2); }
+.edit-form .field input, .edit-form .field textarea { min-height: 46px; padding: 10px 13px; font-size: 15.5px; border-radius: 8px; }
+.edit-form .field .status-select { min-height: 46px; font-size: 15px; padding-inline: 14px 32px; }
+.edit-form .field input::placeholder { color: #69705f; }
+
+@media (max-width: 760px) {
+  .modal-head { padding: 14px 16px; }
+  .modal-body { padding: 16px; }
+  .modal-foot { padding: 12px 16px; }
+  .dd-hero { padding: 16px; }
+  .dd-title { font-size: 20px; }
+  .dd-grid { grid-template-columns: 1fr; }
+  .dd-grid > div.span2 { grid-column: auto; }
+}
+.dd-label { display: inline-block; margin-right: 8px; padding: 1px 7px; border-radius: 4px; font-size: 11.5px; color: var(--green); background: rgb(118 185 0 / 12%); }
+.dd-title { margin-bottom: 0; }
+.industry-tag.big { font-size: 14px; padding: 4px 11px; color: var(--text); }
+.dd-grid dd .badge { font-size: 13.5px; padding: 4px 12px; }

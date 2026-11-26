@@ -27,6 +27,7 @@ job-tracker/
 ├─ supabase/migrate-public-read.sql  旧版（仅白名单可读）升级为公开只读的迁移
 ├─ supabase/migrate-industry.sql     旧版升级：新增「职位行业」列
 ├─ supabase/migrate-starred.sql      旧版升级：新增「精投」星标列
+├─ supabase/migrate-salary.sql       旧版升级：新增「薪资水平」列，并从备注提取已有薪资
 ├─ scripts/check-release.mjs   发布前检查（真实数据 / 密钥）
 ├─ scripts/rls-anon-test.mjs   权限复测脚本
 ├─ .github/workflows/deploy.yml  GitHub Pages 部署流程（交付时在根目录 github-workflow-deploy.yml，见第 7 节）
@@ -58,7 +59,7 @@ npm run dev
 
 1. 在 <https://supabase.com/dashboard> 新建项目，记下 **Project URL**（`https://<project-ref>.supabase.co`）。
 2. **建表和 RLS**：打开 **SQL Editor**，粘贴 `supabase/schema.sql` 的全部内容并运行。这个脚本可以重复执行。
-   已经用旧版脚本建过表的项目，按需运行 `supabase/migrate-public-read.sql`（公开只读）、`supabase/migrate-industry.sql`（职位行业列）和 `supabase/migrate-starred.sql`（精投星标列）。
+   已经用旧版脚本建过表的项目，按需运行 `supabase/migrate-public-read.sql`（公开只读）、`supabase/migrate-industry.sql`（职位行业列）、`supabase/migrate-starred.sql`（精投星标列）和 `supabase/migrate-salary.sql`（薪资水平列）。
 3. **API key**：打开 **Project Settings → API Keys**，复制 **Publishable key**（以 `sb_publishable_` 开头）。
    - 前端只用 publishable key。
    - `secret` / `service_role` key 不要放进 `.env.local`、GitHub Variables、代码或聊天记录。
@@ -225,6 +226,7 @@ npm run check:release
 | nextAction | next_action | 下一步行动 |
 | lastProgressDate / lastProgressSummary | last_progress_* | 最近进展 |
 | jobCode / location / jobType / channel | 同名蛇形 | 岗位编号、地点、类型、渠道 |
+| salary | salary | 薪资水平（文本，如「1.2-1.6万·13薪」） |
 | starred | starred | 精投（星标收藏），true / false |
 | industry | industry | 职位行业（预设 14 类，也可自填；为空时显示「未分类」） |
 | jobUrl / jobUrlLabel | job_url / job_url_label | 招聘链接及显示文字 |

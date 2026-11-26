@@ -56,9 +56,9 @@ export default function RecordList({ records, startIndex = 0, mobile, readOnly, 
             <div className="card-head">
               <div>
                 <div className="card-title">
+                  <span className="card-star">{star(r)}</span>
                   <span className="seq">#{startIndex + i + 1}</span>
                   <span className="position-title">{r.position}</span>
-                  {star(r)}
                 </div>
                 <div className="company-line">{r.company}</div>
               </div>
@@ -84,6 +84,7 @@ export default function RecordList({ records, startIndex = 0, mobile, readOnly, 
       <table className="table">
         <thead>
           <tr>
+            <th className="star-col" title="精投"><span aria-hidden="true">★</span><span className="sr-only">精投</span></th>
             <th className="seq-col">#</th>
             <th>职位</th>
             <th>行业</th>
@@ -95,11 +96,11 @@ export default function RecordList({ records, startIndex = 0, mobile, readOnly, 
         <tbody>
           {records.map((r, i) => (
             <tr key={r.id} className={`row-anim ${r.starred ? 'starred' : ''}`} style={{ '--i': Math.min(i, 12) }}>
+              <td className="star-col">{star(r)}</td>
               <td className="seq-col muted">{startIndex + i + 1}</td>
               <td className="job-cell">
                 <div className="job-title">
                   <span className="position-title">{r.position}</span>
-                  {star(r)}
                 </div>
                 <div className="job-sub">
                   <span className="company-line">{r.company}</span>

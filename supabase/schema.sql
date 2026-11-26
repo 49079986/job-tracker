@@ -62,6 +62,7 @@ create table if not exists public.applications (
   job_type               text,
   industry               text,               -- 职位行业（可在网页上编辑）
   starred                boolean not null default false,  -- 精投（星标收藏）
+  salary                 text,               -- 薪资水平
   channel                text,
   job_url                text,
   job_url_label          text,
@@ -80,6 +81,7 @@ create table if not exists public.applications (
 -- 旧项目升级：补上后来新增的列（新项目建表时已包含，这里不会重复添加）
 alter table public.applications add column if not exists industry text;
 alter table public.applications add column if not exists starred boolean not null default false;
+alter table public.applications add column if not exists salary text;
 
 -- 同一来源的同一原表编号只能出现一次（防止 ID 不同但来源编号相同的重复导入）
 create unique index if not exists applications_source_legacy_uidx

@@ -4,7 +4,7 @@ import { isUuid, uuidv5 } from './uuid.js';
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TEXT_KEYS = [
   'legacyId', 'company', 'position', 'status', 'nextAction', 'lastProgressSummary', 'confirmedEventAt',
-  'eventTypeAndTimezone', 'jobCode', 'location', 'jobType', 'industry', 'channel', 'jobUrl', 'jobUrlLabel',
+  'eventTypeAndTimezone', 'jobCode', 'location', 'salary', 'jobType', 'industry', 'channel', 'jobUrl', 'jobUrlLabel',
   'sourceDocLabel', 'notes',
 ];
 
