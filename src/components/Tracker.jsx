@@ -9,8 +9,10 @@ import EditDialog from './EditDialog.jsx';
 import ImportDialog from './ImportDialog.jsx';
 import RecordList from './RecordList.jsx';
 import useMedia from './useMedia.js';
+import SignInButton from './Login.jsx';
+import NotAllowedBanner from './Unauthorized.jsx';
 
-export default function Tracker({ user, onSignOut }) {
+export default function Tracker({ user, canEdit, notAllowed, authError, onSignOut }) {
   const toast = useToast();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +20,7 @@ export default function Tracker({ user, onSignOut }) {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('全部');
   const [sort, setSort] = useState('desc');
-  const [editing, setEditing] = useState(null); // null | 'new' | record
+  const [editing, setEditing] = useState(null); // null | 'new' | record（只读模式下为查看详情）
   const [deleting, setDeleting] = useState(null);
   const [importing, setImporting] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
@@ -128,23 +130,38 @@ export default function Tracker({ user, onSignOut }) {
           <h1 className="brand">求职投递管理</h1>
         </div>
         <div className="top-actions">
-          <button className="btn primary" onClick={() => setEditing('new')}>＋ 新增</button>
-          <button className="btn" onClick={() => setImporting(true)}>导入 JSON</button>
-          <div className="menu-wrap">
-            <button className="btn" aria-haspopup="menu" aria-expanded={exportOpen} onClick={() => setExportOpen((v) => !v)}>
-              导出全部记录 ▾
-            </button>
-            {exportOpen && (
-              <div className="menu fade-in" role="menu" onMouseLeave={() => setExportOpen(false)}>
-                <button role="menuitem" onClick={() => doExport('json')}>JSON（可重新导入恢复）</button>
-                <button role="menuitem" onClick={() => doExport('csv')}>CSV（Excel 打开）</button>
+          {canEdit && (
+            <>
+              <button className="btn primary" onClick={() => setEditing('new')}>＋ 新增</button>
+              <button className="btn" onClick={() => setImporting(true)}>导入 JSON</button>
+              <div className="menu-wrap">
+                <button className="btn" aria-haspopup="menu" aria-expanded={exportOpen} onClick={() => setExportOpen((v) => !v)}>
+                  导出全部记录 ▾
+                </button>
+                {exportOpen && (
+                  <div className="menu fade-in" role="menu" onMouseLeave={() => setExportOpen(false)}>
+                    <button role="menuitem" onClick={() => doExport('json')}>JSON（可重新导入恢复）</button>
+                    <button role="menuitem" onClick={() => doExport('csv')}>CSV（Excel 打开）</button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <span className="user" title={user.id}>{name}</span>
-          <button className="btn ghost signout" onClick={onSignOut}>退出</button>
+            </>
+          )}
+          {user ? (
+            <>
+              <span className="user" title={user.id}>{name}</span>
+              <button className="btn ghost signout" onClick={onSignOut}>退出</button>
+            </>
+          ) : (
+            <span className="signin">
+              <SignInButton className="btn ghost" />
+            </span>
+          )}
         </div>
       </header>
+
+      {authError && <p className="error-text banner-error" role="alert">{authError}</p>}
+      {notAllowed && user && <NotAllowedBanner user={user} />}
 
       <section className="filters">
         <input
@@ -184,13 +201,14 @@ export default function Tracker({ user, onSignOut }) {
             <p className="result-count muted">共 {visible.length} 条{visible.length !== records.length ? `（全部 ${records.length} 条）` : ''}</p>
             {visible.length === 0 ? (
               <div className="empty fade-in" key={listKey}>
-                {records.length === 0 ? '还没有记录。可以新增一条，或导入 JSON。' : '没有符合条件的记录。'}
+                {records.length === 0 ? (canEdit ? '还没有记录。可以新增一条，或导入 JSON。' : '还没有记录。') : '没有符合条件的记录。'}
               </div>
             ) : (
               <RecordList
                 key={listKey}
                 records={visible}
                 mobile={mobile}
+                readOnly={!canEdit}
                 busyIds={busyIds}
                 onStatus={changeStatus}
                 onEdit={setEditing}
@@ -201,8 +219,15 @@ export default function Tracker({ user, onSignOut }) {
         )}
       </main>
 
-      {editing && <EditDialog record={editing === 'new' ? null : editing} onSave={save} onClose={() => setEditing(null)} />}
-      {deleting && (
+      {editing && (
+        <EditDialog
+          record={editing === 'new' ? null : editing}
+          readOnly={!canEdit}
+          onSave={save}
+          onClose={() => setEditing(null)}
+        />
+      )}
+      {canEdit && deleting && (
         <ConfirmDialog
           title="删除记录"
           danger
@@ -212,7 +237,7 @@ export default function Tracker({ user, onSignOut }) {
           onClose={() => setDeleting(null)}
         />
       )}
-      {importing && (
+      {canEdit && importing && (
         <ImportDialog
           existing={records}
           onClose={() => setImporting(false)}

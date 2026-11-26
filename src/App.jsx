@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { configured, supabase } from './supabase.js';
 import { checkAllowed } from './lib/repo.js';
-import Login from './components/Login.jsx';
-import Unauthorized from './components/Unauthorized.jsx';
 import Tracker from './components/Tracker.jsx';
 import { ToastProvider } from './components/Toast.jsx';
 
@@ -50,13 +48,21 @@ export default function App() {
 
   const signOut = () => supabase.auth.signOut();
 
+  // 公开只读：未登录也能浏览；登录且在白名单中才能编辑
   let body;
   if (!configured) body = <NotConfigured />;
   else if (session === undefined) body = <Splash text="正在加载…" />;
-  else if (!session) body = <Login error={authError} />;
-  else if (allowed === null) body = <Splash text="正在验证访问权限…" />;
-  else if (!allowed) body = <Unauthorized user={session.user} error={authError} onSignOut={signOut} />;
-  else body = <Tracker user={session.user} onSignOut={signOut} />;
+  else if (session && allowed === null) body = <Splash text="正在验证编辑权限…" />;
+  else
+    body = (
+      <Tracker
+        user={session?.user ?? null}
+        canEdit={Boolean(session && allowed)}
+        notAllowed={Boolean(session && !allowed)}
+        authError={authError}
+        onSignOut={signOut}
+      />
+    );
 
   return <ToastProvider>{body}</ToastProvider>;
 }

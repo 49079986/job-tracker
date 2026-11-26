@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// 权限复测：验证未登录访客（只有 publishable key）和未授权账号都无法读写记录。
+// 权限复测：记录对所有人公开只读；验证未登录访客（只有 publishable key）和未授权账号都无法新增、修改、删除，
+// 也无法读取白名单。
 //
 // 用法（PowerShell）：
 //   $env:SUPABASE_URL="https://xxxx.supabase.co"; $env:SUPABASE_PUBLISHABLE_KEY="sb_publishable_..."; npm run test:rls
@@ -47,8 +48,8 @@ const probe = { id: '00000000-0000-4000-8000-000000000001', company: 'RLS测试�
 
 async function suite(label, auth) {
   console.log(`\n== ${label} ==`);
-  let r = await call('GET', '/applications?select=id,company&limit=5', auth);
-  check('读取记录被阻止', denied(r), desc(r));
+  let r = await call('GET', '/applications?select=id&limit=5', auth);
+  console.log(`ℹ 公开读取记录（按设计允许） — ${desc(r)}`);
   r = await call('POST', '/applications', auth, probe);
   check('新增记录被阻止', r.status >= 400, desc(r));
   r = await call('PATCH', '/applications?id=not.is.null', auth, { notes: 'rls-test' });

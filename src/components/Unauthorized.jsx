@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
-export default function Unauthorized({ user, error, onSignOut }) {
+/** 已登录但不在白名单时显示的提示条：可以浏览，不能编辑 */
+export default function NotAllowedBanner({ user }) {
   const [copied, setCopied] = useState(false);
   const name = user?.user_metadata?.user_name || user?.user_metadata?.preferred_username || user?.email || '';
   const copy = async () => {
@@ -13,20 +14,15 @@ export default function Unauthorized({ user, error, onSignOut }) {
     }
   };
   return (
-    <main className="center-screen">
-      <div className="panel narrow fade-in">
-        <h1 className="brand">暂无访问权限</h1>
-        <p>
-          已用 GitHub 账号 <strong>{name}</strong> 登录，但该账号还不在白名单中。
-        </p>
-        <p className="muted">如果这是你的账号：在 Supabase Dashboard → Authentication → Users 核对下方 UUID，再由管理员加入 allowlist 表（见 README）。</p>
-        <div className="uuid-box">
-          <code>{user.id}</code>
-          <button className="btn ghost small" onClick={copy}>{copied ? '已复制' : '复制'}</button>
-        </div>
-        {error && <p className="error-text" role="alert">{error}</p>}
-        <button className="btn" onClick={onSignOut}>退出登录</button>
+    <div className="banner fade-in" role="status">
+      <div>
+        已用 GitHub 账号 <strong>{name}</strong> 登录，但该账号没有编辑权限，目前只能浏览。
+        如果这是你的账号，请把下方 UUID 加入 allowlist 表（见 README）。
       </div>
-    </main>
+      <div className="uuid-box">
+        <code>{user.id}</code>
+        <button className="btn ghost small" onClick={copy}>{copied ? '已复制' : '复制'}</button>
+      </div>
+    </div>
   );
 }

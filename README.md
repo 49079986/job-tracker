@@ -2,7 +2,8 @@
 
 中文求职投递管理网站。网页托管在 GitHub Pages，用 Supabase 负责 GitHub 登录和数据存储。
 
-- 公开网页只有登录入口；真实记录只有白名单里的账号能读写，数据库层用 RLS 强制限制。
+- **公开只读**：任何人打开网页都能浏览、搜索、筛选全部记录（含备注），不用登录。
+- **编辑需登录**：新增、编辑、删除、改状态、导入、导出只有白名单里的 GitHub 账号登录后才能用；数据库层用 RLS 强制限制，绕开网页直接调用接口也写不进去。
 - 支持搜索、按状态筛选、按投递日期排序、新增、编辑、删除、快速改状态。
 - 支持导入 JSON（导入前先预览）和导出全部记录（JSON / CSV）。
 - 桌面端显示表格，手机端显示卡片。
@@ -10,6 +11,8 @@
 技术栈：Vite + React + `@supabase/supabase-js`。
 
 > 本仓库只包含代码、配置模板和虚构示例数据（`sample-data/`）。真实记录放在被 `.gitignore` 忽略的 `local-data/`，登录后从网页导入。
+>
+> 注意：记录对所有人公开可读，备注里的薪资等信息任何拿到网址的人都能看到。`index.html` 设置了 `noindex`，搜索引擎不会收录，但这不是访问控制。如需改回“仅白名单可读”，见 `supabase/migrate-public-read.sql` 末尾。
 
 ---
 
@@ -18,7 +21,8 @@
 ```
 job-tracker/
 ├─ src/                    前端代码
-├─ supabase/schema.sql     建表 + RLS + 白名单
+├─ supabase/schema.sql     建表 + RLS + 白名单（公开只读，编辑限白名单）
+├─ supabase/migrate-public-read.sql  旧版（仅白名单可读）升级为公开只读的迁移
 ├─ scripts/check-release.mjs   发布前检查（真实数据 / 密钥）
 ├─ scripts/rls-anon-test.mjs   权限复测脚本
 ├─ .github/workflows/deploy.yml  GitHub Pages 部署流程（交付时在根目录 github-workflow-deploy.yml，见第 7 节）
@@ -50,6 +54,7 @@ npm run dev
 
 1. 在 <https://supabase.com/dashboard> 新建项目，记下 **Project URL**（`https://<project-ref>.supabase.co`）。
 2. **建表和 RLS**：打开 **SQL Editor**，粘贴 `supabase/schema.sql` 的全部内容并运行。这个脚本可以重复执行。
+   已经用旧版脚本（仅白名单可读）建过表的项目，只需运行 `supabase/migrate-public-read.sql`。
 3. **API key**：打开 **Project Settings → API Keys**，复制 **Publishable key**（以 `sb_publishable_` 开头）。
    - 前端只用 publishable key。
    - `secret` / `service_role` key 不要放进 `.env.local`、GitHub Variables、代码或聊天记录。
@@ -75,7 +80,7 @@ npm run dev
 
 白名单表 `allowlist` 默认为空，只能由管理员在 Dashboard 里维护。网页和数据库 API 都无法读写它。
 
-1. 打开网站，点「使用 GitHub 登录」。这时会看到「暂无访问权限」，页面上显示当前账号的 UUID。
+1. 打开网站，点右上角「登录以编辑」。登录后页面顶部会出现黄色提示「该账号没有编辑权限」，并显示当前账号的 UUID。
 2. 在 Supabase Dashboard → **Authentication → Users** 里找到 Provider 为 GitHub、用户名是你的那一行，核对 **UID** 和网页上显示的一致。
 3. 打开 **SQL Editor** 运行（替换成你的 UID 和用户名）：
 
@@ -84,7 +89,7 @@ npm run dev
    values ('你的-UID', '你的GitHub用户名', '本人');
    ```
 
-4. 刷新网页，就能进入投递列表。
+4. 刷新网页，右上角出现「新增」「导入 JSON」「导出全部记录」，记录行出现「编辑」「删除」和状态下拉框。
 
 RLS 只用 `auth.uid()` 判断权限，GitHub 用户名只是备注。
 如果要移除授权：`delete from public.allowlist where user_id = '...';`
@@ -164,7 +169,7 @@ Vite 的 `base` 已设为 `/job-tracker/`。如果仓库改了名字，要同时
 1. 登录后修改一条记录的状态或备注，刷新页面，修改仍在。
 2. 打开一个全新的无痕窗口或其他设备，登录同一 GitHub 账号，能看到刚才的修改。
 
-### 8.2 未登录访客无法读写（命令行）
+### 8.2 未登录访客只能读、不能写（命令行）
 
 ```powershell
 $env:SUPABASE_URL="https://<project-ref>.supabase.co"
@@ -172,11 +177,11 @@ $env:SUPABASE_PUBLISHABLE_KEY="sb_publishable_..."
 npm run test:rls
 ```
 
-预期所有项都显示 ✔：读取返回错误或 0 行；新增、更新、删除和读取白名单都被拒绝或影响 0 行。
+预期：读取记录一行显示 ℹ（公开只读，按设计允许）；新增、更新、删除和读取白名单全部显示 ✔（被拒绝或影响 0 行）。
 
-### 8.3 其他 GitHub 账号无法读写
+### 8.3 其他 GitHub 账号只能读、不能写
 
-1. 用无痕窗口打开网站，用**另一个** GitHub 账号登录。页面应显示「暂无访问权限」。
+1. 用无痕窗口打开网站，用**另一个** GitHub 账号点「登录以编辑」。页面应显示黄色提示「该账号没有编辑权限」，并且没有新增、编辑、删除按钮。
 2. 在这个窗口按 F12 打开控制台，执行下面的命令拿到该账号的访问令牌：
 
    ```js
@@ -190,7 +195,7 @@ npm run test:rls
    npm run test:rls
    ```
 
-   预期「已登录但未授权的账号」一组全部 ✔。
+   预期「已登录但未授权的账号」一组：读取为 ℹ，其余全部 ✔。
    脚本会先检查令牌是否属于白名单账号；如果是，脚本会直接停止，不会改动数据。
 
 4. 测完后删除这个令牌，退出该账号。如果不再需要，也可以在 Supabase → Authentication → Users 删除这个测试用户。

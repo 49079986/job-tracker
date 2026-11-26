@@ -1,5 +1,5 @@
 import { SOURCE_LABEL } from '../lib/constants.js';
-import { StatusSelect } from './StatusBadge.jsx';
+import { StatusBadge, StatusSelect } from './StatusBadge.jsx';
 
 const sourceText = (r) => (r.sources || []).map((s) => SOURCE_LABEL[s] || s).join(' + ');
 const safeUrl = (u) => (u && /^https?:\/\//i.test(u) ? u : null);
@@ -14,7 +14,18 @@ function JobLink({ r }) {
   );
 }
 
-export default function RecordList({ records, mobile, busyIds, onStatus, onEdit, onDelete }) {
+export default function RecordList({ records, mobile, readOnly, busyIds, onStatus, onEdit, onDelete }) {
+  const status = (r, label) =>
+    readOnly ? <StatusBadge status={r.status} /> : <StatusSelect value={r.status} disabled={busyIds.has(r.id)} onChange={(v) => onStatus(r, v)} label={label} />;
+  const actions = (r) =>
+    readOnly ? (
+      <button className="btn small" onClick={() => onEdit(r)}>详情</button>
+    ) : (
+      <>
+        <button className="btn small" onClick={() => onEdit(r)}>编辑</button>
+        <button className="btn small danger-ghost" onClick={() => onDelete(r)}>删除</button>
+      </>
+    );
   if (mobile) {
     return (
       <ul className="cards">
@@ -25,7 +36,7 @@ export default function RecordList({ records, mobile, busyIds, onStatus, onEdit,
                 <div className="company">{r.company}</div>
                 <div className="position">{r.position}</div>
               </div>
-              <StatusSelect value={r.status} disabled={busyIds.has(r.id)} onChange={(s) => onStatus(r, s)} label={`${r.company} 状态`} />
+              {status(r, `${r.company} 状态`)}
             </div>
             <dl className="card-meta">
               <div><dt>投递日期</dt><dd>{r.appliedDate || <span className="muted">未知</span>}</dd></div>
@@ -35,8 +46,7 @@ export default function RecordList({ records, mobile, busyIds, onStatus, onEdit,
             <div className="card-actions">
               <JobLink r={r} />
               <span className="grow" />
-              <button className="btn small" onClick={() => onEdit(r)}>编辑</button>
-              <button className="btn small danger-ghost" onClick={() => onDelete(r)}>删除</button>
+              {actions(r)}
             </div>
           </li>
         ))}
@@ -65,13 +75,12 @@ export default function RecordList({ records, mobile, busyIds, onStatus, onEdit,
                 <div>{r.position}</div>
                 <JobLink r={r} />
               </td>
-              <td><StatusSelect value={r.status} disabled={busyIds.has(r.id)} onChange={(s) => onStatus(r, s)} label={`${r.company} ${r.position} 状态`} /></td>
+              <td>{status(r, `${r.company} ${r.position} 状态`)}</td>
               <td className="nowrap">{r.appliedDate || <span className="muted">未知</span>}</td>
               <td className="next">{r.nextAction}</td>
               <td className="nowrap muted">{sourceText(r)}</td>
               <td className="actions-col nowrap">
-                <button className="btn small" onClick={() => onEdit(r)}>编辑</button>
-                <button className="btn small danger-ghost" onClick={() => onDelete(r)}>删除</button>
+                {actions(r)}
               </td>
             </tr>
           ))}

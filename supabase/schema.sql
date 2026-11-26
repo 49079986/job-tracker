@@ -91,20 +91,22 @@ drop trigger if exists applications_touch on public.applications;
 create trigger applications_touch before update on public.applications
   for each row execute function public.touch_updated_at();
 
--- ---------- 4. RLS：查询 / 新增 / 更新 / 删除 全部要求在白名单 ----------
+-- ---------- 4. RLS：所有人可读；新增 / 更新 / 删除 要求在白名单 ----------
 alter table public.applications enable row level security;
 alter table public.applications force row level security;
 
 revoke all on public.applications from anon;
+grant select on public.applications to anon;   -- 公开只读
 grant select, insert, update, delete on public.applications to authenticated;
 
 drop policy if exists "allowlisted select" on public.applications;
+drop policy if exists "public select" on public.applications;
 drop policy if exists "allowlisted insert" on public.applications;
 drop policy if exists "allowlisted update" on public.applications;
 drop policy if exists "allowlisted delete" on public.applications;
 
-create policy "allowlisted select" on public.applications
-  for select to authenticated using ((select public.is_allowed()));
+create policy "public select" on public.applications
+  for select to anon, authenticated using (true);
 create policy "allowlisted insert" on public.applications
   for insert to authenticated with check ((select public.is_allowed()));
 create policy "allowlisted update" on public.applications

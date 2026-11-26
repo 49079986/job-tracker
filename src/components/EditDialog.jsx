@@ -6,7 +6,7 @@ import { StatusSelect } from './StatusBadge.jsx';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-export default function EditDialog({ record, onSave, onClose }) {
+export default function EditDialog({ record, readOnly = false, onSave, onClose }) {
   const initial = useMemo(() => {
     const base = emptyRecord();
     if (record) for (const k of Object.keys(base)) base[k] = record[k] ?? '';
@@ -41,19 +41,24 @@ export default function EditDialog({ record, onSave, onClose }) {
 
   return (
     <Modal
-      title={record ? '编辑记录' : '新增记录'}
+      title={readOnly ? '记录详情' : record ? '编辑记录' : '新增记录'}
       wide
       busy={busy}
       onClose={onClose}
       footer={
+        readOnly ? (
+          <button className="btn" onClick={onClose}>关闭</button>
+        ) : (
         <>
           {error && <p className="error-text foot-error" role="alert">{error}</p>}
           <button className="btn" onClick={onClose} disabled={busy}>取消</button>
           <button className="btn primary" onClick={submit} disabled={busy}>{busy ? '保存中…' : error ? '重试保存' : '保存'}</button>
         </>
+        )
       }
     >
       <form className="form-grid" onSubmit={submit} noValidate>
+        <fieldset className="contents" disabled={readOnly}>
         {FORM_FIELDS.map((f) => (
           <label key={f.key} className={`field ${f.type === 'textarea' || f.wide ? 'wide' : ''}`}>
             <span>{f.label}{f.required && <em aria-hidden="true"> *</em>}</span>
@@ -72,9 +77,10 @@ export default function EditDialog({ record, onSave, onClose }) {
             )}
           </label>
         ))}
+        </fieldset>
         <button type="submit" hidden />
       </form>
-      {touched && problems.length > 0 && <p className="error-text" role="alert">{problems.join('；')}</p>}
+      {!readOnly && touched && problems.length > 0 && <p className="error-text" role="alert">{problems.join('；')}</p>}
       {record?.timeline?.length > 0 && (
         <details className="timeline">
           <summary>进展记录（{record.timeline.length}）</summary>
